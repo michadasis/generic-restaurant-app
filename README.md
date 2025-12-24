@@ -1,22 +1,22 @@
-# 🥗 UoWM University Restaurant Menu App
+# UoWM University Restaurant Menu App
 
 [![React Native](https://img.shields.io/badge/React_Native-0.71-blue)](https://reactnative.dev/)  
 [![TypeScript](https://img.shields.io/badge/TypeScript-4.9-blue)](https://www.typescriptlang.org/)  
-[![License](https://img.shields.io/badge/License-Academic-lightgrey)](#license)  
+[![License](https://img.shields.io/badge/License-Academic-lightgrey)](./LICENSE)  
 
 A **React Native** mobile application to view the **weekly menu** of the University of Western Macedonia (UoWM) restaurant. The app supports **dark/light mode** and **daily menu navigation**.
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
   Light Mode / Dark Mode 
 ==========================
-| ![Light Mode](screenshots/light.png) | ![Dark Mode](screenshots/dark.png) |
+| ![Light Mode](assets/images/Light.jpg) | ![Dark Mode](assets/images/Dark.jpg) |
 
 ---
 
-## 🚀 Features
+## Features
 
 - **Daily Menu**: View lunch and dinner options for any day of the week.
 - **Week Navigation**: Automatically displays the correct weekly menu.
@@ -25,9 +25,12 @@ A **React Native** mobile application to view the **weekly menu** of the Univers
 
 ---
 
-## 💻 Installation
+## Installation
 
-1. **Clone the repository**
+0. **(Only available for android)**
+1. Install the latest apk at the [releases tab](https://github.com/michadasis/generic-restaurant-app/releases)
+
+## Contributing
 
 ```bash
 git clone https://github.com/yourusername/UoWM-Restaurant-App.git
