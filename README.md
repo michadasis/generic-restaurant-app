@@ -32,6 +32,6 @@ A **React Native** mobile application to view the **weekly menu** of the Univers
 ## Contributing
 
 ```bash
-git clone https://github.com/yourusername/UoWM-Restaurant-App.git
-cd UoWM-Restaurant-App
+git clone https://github.com/michadasis/generic-restaurant-app.git
+cd generic-restaurant-app
 
