@@ -2,7 +2,7 @@
 
 [![React Native](https://img.shields.io/badge/React_Native-0.71-blue)](https://reactnative.dev/)  
 [![TypeScript](https://img.shields.io/badge/TypeScript-4.9-blue)](https://www.typescriptlang.org/)  
-[![License](https://img.shields.io/badge/License-Academic-lightgrey)](./LICENSE)  
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 A **React Native** mobile application to view the **weekly menu** of the University of Western Macedonia (UoWM) restaurant. The app supports **dark/light mode** and **daily menu navigation**.
 
