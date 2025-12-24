@@ -11,11 +11,10 @@ A **React Native** mobile application to view the **weekly menu** of the Univers
 ## Screenshots
 
   Light Mode / Dark Mode 
-==========================
-| ![Light Mode](assets/images/Light.jpg) | ![Dark Mode](assets/images/Dark.jpg) |
-
----
-
+<div style="display:flex; gap:8px;">
+  <img src="assets/images/Light.jpg/" width="350"/>
+  <img src="assets/images/Dark.jpg" width="350"/>
+</div>
 ## Features
 
 - **Daily Menu**: View lunch and dinner options for any day of the week.
