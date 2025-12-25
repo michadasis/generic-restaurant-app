@@ -27,7 +27,7 @@ export default function AboutScreen() {
           <Text style={themeStyles.cardTitle}>About this app</Text>
           <View style={themeStyles.divider} />
           <Text style={themeStyles.item}>
-            This app was developed for the University of West Macedonia's students in order for them to have easier access to the weekly menu in a clean and simple way.
+            This app was developed for the University of Western Macedonia's students in order for them to have easier access to the weekly menu in a clean and simple way.
           </Text>
           <Text style={themeStyles.item}>
             Developed with React Native and designed for mobile devices.
