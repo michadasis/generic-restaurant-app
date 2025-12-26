@@ -222,21 +222,21 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   dayChip: {
-    paddingVertical: 6,
     paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: 18,
     marginRight: 8,
     backgroundColor: 'rgba(0,0,0,0.08)',
-    justifyContent: 'center',
     alignItems: 'center',
-    minHeight: 32,
+    justifyContent: 'center',
   },
   dayChipText: {
     fontSize: 14,
     fontWeight: '600',
     color: '#555',
-    lineHeight: 18,
-    textAlign: 'center',
+    lineHeight: 22,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
     dayChipActive: {
     backgroundColor: '#2e7d32',
@@ -248,35 +248,36 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   weekSelector: {
-  paddingHorizontal: 16,
-  paddingTop: 10,
-  paddingBottom: 4,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 4,
 },
 
-weekChip: {
-  paddingVertical: 6,
-  paddingHorizontal: 16,
-  borderRadius: 18,
-  marginRight: 8,
-  backgroundColor: 'rgba(0,0,0,0.08)',
-  minHeight: 32,
-  justifyContent: 'center',
-  alignItems: 'center',
+  weekChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginRight: 8,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
 },
 
-weekChipActive: {
-  backgroundColor: '#2e7d32',
+  weekChipActive: {
+    backgroundColor: '#2e7d32',
 },
 
-weekChipText: {
-  fontSize: 14,
-  fontWeight: '600',
-  color: '#555',
-  lineHeight: 18,
+  weekChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#555',
+    lineHeight: 22,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
 },
 
-weekChipTextActive: {
-  color: '#fff',
+  weekChipTextActive: {
+    color: '#fff',
 }
 });
 
