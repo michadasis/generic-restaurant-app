@@ -5,6 +5,7 @@ import { menu } from '../../data/menu';
 import { getTodayKey, getTodayLabel } from '@/utils/getToday';
 import { getCurrentWeekIndex } from '@/utils/getWeek';
 
+
 type DayKey =
   | 'monday'
   | 'tuesday'
@@ -48,9 +49,16 @@ const DAYS: { key: DayKey; label: string }[] = [
 
 export default function HomeScreen() {
   const [darkMode, setDarkMode] = useState<boolean | null>(null);
+
   const todayKey = getTodayKey();
   const todayLabel = getTodayLabel();
+
   const [selectedDay, setSelectedDay] = useState<DayKey>(todayKey);
+
+  const weekKeys: WeekKey[] = ['week1', 'week2', 'week3', 'week4'];
+  const [selectedWeek, setSelectedWeek] = useState<WeekKey>(
+    weekKeys[getCurrentWeekIndex()]
+  );
 
   useEffect(() => {
     AsyncStorage.getItem('theme').then(saved => setDarkMode(saved === 'dark'));
@@ -64,29 +72,53 @@ export default function HomeScreen() {
 
   if (darkMode === null) return null;
 
-  const weekKeys: WeekKey[] = ['week1', 'week2', 'week3', 'week4'];
-  const currentWeekKey = weekKeys[getCurrentWeekIndex()];
-
-  const todayMenu: DailyMenu = menu[currentWeekKey][selectedDay];
+  const todayMenu: DailyMenu = menu[selectedWeek][selectedDay];
   const themeStyles = darkMode ? darkStyles : lightStyles;
-  const safePaddingTop = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
+  const safePaddingTop =
+    Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
 
   return (
-    <SafeAreaView style={[styles.root, themeStyles.container, { paddingTop: safePaddingTop }]}>
-      {/* Header */}
+    <SafeAreaView
+      style={[styles.root, themeStyles.container, { paddingTop: safePaddingTop }]}
+    >
       <View style={[styles.header, themeStyles.header]}>
         <View>
           <Text style={themeStyles.headerDay}>{todayLabel}</Text>
           <Text style={themeStyles.headerSubtitle}>Weekly Menu</Text>
         </View>
 
-        <Pressable
-          onPress={() => setDarkMode(v => !v)}
-          style={styles.themeButton}
-        >
-          <Text style={themeStyles.toggleButtonText}>{darkMode ? '☀️' : '🌙'}</Text>
+        <Pressable onPress={() => setDarkMode(v => !v)} style={styles.themeButton}>
+          <Text style={themeStyles.toggleButtonText}>
+            {darkMode ? '☀️' : '🌙'}
+          </Text>
         </Pressable>
       </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.weekSelector}
+      >
+        {weekKeys.map((week, index) => {
+          const active = week === selectedWeek;
+          return (
+            <Pressable
+              key={week}
+              onPress={() => setSelectedWeek(week)}
+              style={[styles.weekChip, active && styles.weekChipActive]}
+            >
+              <Text
+                style={[
+                  styles.weekChipText,
+                  active && styles.weekChipTextActive,
+                ]}
+              >
+              {index + 1}ή Εβδομάδα
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
 
       <ScrollView
         horizontal
@@ -101,7 +133,12 @@ export default function HomeScreen() {
               onPress={() => setSelectedDay(day.key)}
               style={[styles.dayChip, active && styles.dayChipActive]}
             >
-              <Text style={[styles.dayChipText, active && styles.dayChipTextActive]}>
+              <Text
+                style={[
+                  styles.dayChipText,
+                  active && styles.dayChipTextActive,
+                ]}
+              >
                 {day.label}
               </Text>
             </Pressable>
@@ -185,20 +222,20 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   dayChip: {
-    paddingVertical: 6,        // reduce slightly if text is large
+    paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 18,
     marginRight: 8,
     backgroundColor: 'rgba(0,0,0,0.08)',
-    justifyContent: 'center',  // vertically center
-    alignItems: 'center',      // horizontally center
-    minHeight: 32,             // ensures chips have enough height
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 32,
   },
   dayChipText: {
     fontSize: 14,
     fontWeight: '600',
     color: '#555',
-    lineHeight: 18,            // matches font size for proper vertical alignment
+    lineHeight: 18,
     textAlign: 'center',
   },
     dayChipActive: {
@@ -210,6 +247,37 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
   },
+  weekSelector: {
+  paddingHorizontal: 16,
+  paddingTop: 10,
+  paddingBottom: 4,
+},
+
+weekChip: {
+  paddingVertical: 6,
+  paddingHorizontal: 16,
+  borderRadius: 18,
+  marginRight: 8,
+  backgroundColor: 'rgba(0,0,0,0.08)',
+  minHeight: 32,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+weekChipActive: {
+  backgroundColor: '#2e7d32',
+},
+
+weekChipText: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: '#555',
+  lineHeight: 18,
+},
+
+weekChipTextActive: {
+  color: '#fff',
+}
 });
 
 const lightStyles = StyleSheet.create({
