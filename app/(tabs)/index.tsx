@@ -1,10 +1,16 @@
 import React, { ReactNode, useEffect, useState } from 'react';
-import { ScrollView, View, Text, StyleSheet, Pressable, SafeAreaView, StatusBar, Platform } from 'react-native';
+import {
+  ScrollView,
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  SafeAreaView,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { menu } from '../../data/menu';
 import { getTodayKey, getTodayLabel } from '@/utils/getToday';
 import { getCurrentWeekIndex } from '@/utils/getWeek';
-
 
 type DayKey =
   | 'monday'
@@ -52,7 +58,6 @@ export default function HomeScreen() {
 
   const todayKey = getTodayKey();
   const todayLabel = getTodayLabel();
-
   const [selectedDay, setSelectedDay] = useState<DayKey>(todayKey);
 
   const weekKeys: WeekKey[] = ['week1', 'week2', 'week3', 'week4'];
@@ -74,13 +79,9 @@ export default function HomeScreen() {
 
   const todayMenu: DailyMenu = menu[selectedWeek][selectedDay];
   const themeStyles = darkMode ? darkStyles : lightStyles;
-  const safePaddingTop =
-    Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
 
   return (
-    <SafeAreaView
-      style={[styles.root, themeStyles.container, { paddingTop: safePaddingTop }]}
-    >
+    <SafeAreaView style={[styles.root, themeStyles.container]}>
       <View style={[styles.header, themeStyles.header]}>
         <View>
           <Text style={themeStyles.headerDay}>{todayLabel}</Text>
@@ -97,6 +98,7 @@ export default function HomeScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.selectorContainer}
         contentContainerStyle={styles.weekSelector}
       >
         {weekKeys.map((week, index) => {
@@ -123,6 +125,7 @@ export default function HomeScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.selectorContainer}
         contentContainerStyle={styles.daySelector}
       >
         {DAYS.map(day => {
@@ -206,24 +209,36 @@ function Item({ text, themeStyles }: { text: string; themeStyles: any }) {
 //styles
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  selectorContainer: {
+    height: 52,
+    overflow: 'visible',
+    zIndex: 20,//samsung support
+  },
   header: {
     padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    elevation: 4,
+    zIndex: 10,
   },
   themeButton: {
     padding: 8,
     borderRadius: 20,
   },
+  weekSelector: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 4,
+    backgroundColor: 'transparent',
+  },
   daySelector: {
     paddingHorizontal: 16,
     paddingVertical: 10,
+    backgroundColor: 'transparent',
   },
   dayChip: {
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 18,
     marginRight: 8,
     backgroundColor: 'rgba(0,0,0,0.08)',
@@ -234,56 +249,51 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#555',
-    lineHeight: 22,
+    lineHeight: 20,
     includeFontPadding: false,
-    textAlignVertical: 'center',
   },
-    dayChipActive: {
+
+  dayChipActive: {
     backgroundColor: '#2e7d32',
   },
   dayChipTextActive: {
     color: '#fff',
   },
-  scrollContent: {
-    padding: 16,
-  },
-  weekSelector: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 4,
-},
 
   weekChip: {
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12, // ⬆ Samsung fix
     borderRadius: 20,
     marginRight: 8,
     backgroundColor: 'rgba(0,0,0,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
-},
+  },
 
   weekChipActive: {
     backgroundColor: '#2e7d32',
-},
+  },
 
   weekChipText: {
     fontSize: 14,
     fontWeight: '600',
     color: '#555',
-    lineHeight: 22,
+    lineHeight: 20,
     includeFontPadding: false,
-    textAlignVertical: 'center',
-},
+  },
 
   weekChipTextActive: {
     color: '#fff',
-}
+  },
+
+  scrollContent: {
+    padding: 16,
+  },
 });
 
 const lightStyles = StyleSheet.create({
   container: { backgroundColor: '#fafafa' },
-  header: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' },
+  header: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee', },
   headerDay: { fontSize: 20, fontWeight: '700', color: '#111' },
   headerSubtitle: { fontSize: 13, color: '#666' },
   section: { marginBottom: 28 },
@@ -297,7 +307,7 @@ const lightStyles = StyleSheet.create({
 
 const darkStyles = StyleSheet.create({
   container: { backgroundColor: '#181818' },
-  header: { backgroundColor: '#202020', borderBottomWidth: 1, borderBottomColor: '#2a2a2a' },
+  header: { backgroundColor: '#202020', borderBottomWidth: 1, borderBottomColor: '#2a2a2a', },
   headerDay: { fontSize: 20, fontWeight: '700', color: '#fff' },
   headerSubtitle: { fontSize: 13, color: '#aaa' },
   section: { marginBottom: 28 },
