@@ -8,9 +8,9 @@ import {
   SafeAreaView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { menu } from '../../data/menu';
+import { menu, WeekMenu } from '../../data/menu';
 import { getTodayKey, getTodayLabel } from '@/utils/getToday';
-import { getCurrentWeekIndex } from '@/utils/getWeek';
+import { getCurrentWeekKey } from '@/utils/getWeek';
 
 type DayKey =
   | 'monday'
@@ -21,7 +21,7 @@ type DayKey =
   | 'saturday'
   | 'sunday';
 
-type WeekKey = 'week1' | 'week2' | 'week3' | 'week4';
+type WeekKey = string;
 
 interface Meal {
   first: string[];
@@ -53,17 +53,18 @@ const DAYS: { key: DayKey; label: string }[] = [
   { key: 'sunday', label: 'Κυρ' },
 ];
 
+const weekKeys: WeekKey[] = Array.from(
+  { length: menu.cycleWeeks },
+  (_, i) => `week${i + 1}`
+);
+
 export default function HomeScreen() {
   const [darkMode, setDarkMode] = useState<boolean | null>(null);
 
   const todayKey = getTodayKey();
   const todayLabel = getTodayLabel();
   const [selectedDay, setSelectedDay] = useState<DayKey>(todayKey);
-
-  const weekKeys: WeekKey[] = ['week1', 'week2', 'week3', 'week4'];
-  const [selectedWeek, setSelectedWeek] = useState<WeekKey>(
-    weekKeys[getCurrentWeekIndex()]
-  );
+  const [selectedWeek, setSelectedWeek] = useState<WeekKey>(getCurrentWeekKey());
 
   useEffect(() => {
     AsyncStorage.getItem('theme').then(saved => setDarkMode(saved === 'dark'));
@@ -77,7 +78,7 @@ export default function HomeScreen() {
 
   if (darkMode === null) return null;
 
-  const todayMenu: DailyMenu = menu[selectedWeek][selectedDay];
+  const todayMenu: DailyMenu = (menu[selectedWeek] as WeekMenu)[selectedDay];
   const themeStyles = darkMode ? darkStyles : lightStyles;
 
   return (
@@ -115,7 +116,7 @@ export default function HomeScreen() {
                   active && styles.weekChipTextActive,
                 ]}
               >
-              {index + 1}ή Εβδομάδα
+                {index + 1}η Εβδομάδα
               </Text>
             </Pressable>
           );
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
   selectorContainer: {
     height: 52,
     overflow: 'visible',
-    zIndex: 20,//samsung support
+    zIndex: 20,
   },
   header: {
     padding: 16,
@@ -252,28 +253,24 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     includeFontPadding: false,
   },
-
   dayChipActive: {
     backgroundColor: '#2e7d32',
   },
   dayChipTextActive: {
     color: '#fff',
   },
-
   weekChip: {
     paddingHorizontal: 16,
-    paddingVertical: 12, // ⬆ Samsung fix
+    paddingVertical: 12,
     borderRadius: 20,
     marginRight: 8,
     backgroundColor: 'rgba(0,0,0,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   weekChipActive: {
     backgroundColor: '#2e7d32',
   },
-
   weekChipText: {
     fontSize: 14,
     fontWeight: '600',
@@ -281,11 +278,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     includeFontPadding: false,
   },
-
   weekChipTextActive: {
     color: '#fff',
   },
-
   scrollContent: {
     padding: 16,
   },
@@ -293,7 +288,7 @@ const styles = StyleSheet.create({
 
 const lightStyles = StyleSheet.create({
   container: { backgroundColor: '#fafafa' },
-  header: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee', },
+  header: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' },
   headerDay: { fontSize: 20, fontWeight: '700', color: '#111' },
   headerSubtitle: { fontSize: 13, color: '#666' },
   section: { marginBottom: 28 },
@@ -307,7 +302,7 @@ const lightStyles = StyleSheet.create({
 
 const darkStyles = StyleSheet.create({
   container: { backgroundColor: '#181818' },
-  header: { backgroundColor: '#202020', borderBottomWidth: 1, borderBottomColor: '#2a2a2a', },
+  header: { backgroundColor: '#202020', borderBottomWidth: 1, borderBottomColor: '#2a2a2a' },
   headerDay: { fontSize: 20, fontWeight: '700', color: '#fff' },
   headerSubtitle: { fontSize: 13, color: '#aaa' },
   section: { marginBottom: 28 },
