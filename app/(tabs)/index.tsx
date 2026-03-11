@@ -211,9 +211,7 @@ function Item({ text, themeStyles }: { text: string; themeStyles: any }) {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   selectorContainer: {
-    height: 52,
-    overflow: 'visible',
-    zIndex: 20,
+    flexShrink: 0,
   },
   header: {
     padding: 16,
@@ -228,13 +226,14 @@ const styles = StyleSheet.create({
   },
   weekSelector: {
     paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 4,
+    paddingTop: 8,
+    paddingBottom: 8,
     backgroundColor: 'transparent',
   },
   daySelector: {
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingTop: 8,
+    paddingBottom: 8,
     backgroundColor: 'transparent',
   },
   dayChip: {
