@@ -2,26 +2,30 @@
   "expo": {
     "name": "Λέσχη UoWM",
     "slug": "restaurant-app",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "restaurantapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.michadasis.restaurantapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
-"android": {
-  "package": "com.michadasis.restaurantapp",
-  "adaptiveIcon": {
-    "backgroundColor": "#E6F4FE",
-   "foregroundImage": "./assets/images/icon.png",
-    "backgroundImage": "./assets/images/background.png",
-    "monochromeImage": "./assets/images/monochrome.png"
-  },
-  "edgeToEdgeEnabled": true,
-  "predictiveBackGestureEnabled": false
-},
+    "android": {
+      "package": "com.michadasis.restaurantapp",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundImage": "./assets/images/background.png",
+        "monochromeImage": "./assets/images/monochrome.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
@@ -34,9 +38,9 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#181818",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#181818"
           }
         }
       ]
