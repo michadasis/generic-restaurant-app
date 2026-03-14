@@ -8,7 +8,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { menu, WeekMenu } from '../../data/menu';
+import { buildMenu, WeekMenu } from '../../data/menu';
 import { getTodayKey, getTodayLabel } from '@/utils/getToday';
 import { getCurrentWeekKey } from '@/utils/getWeek';
 
@@ -22,6 +22,7 @@ type DayKey =
   | 'sunday';
 
 type WeekKey = string;
+type Lang = 'gr' | 'en';
 
 interface Meal {
   first: string[];
@@ -53,13 +54,11 @@ const DAYS: { key: DayKey; label: string }[] = [
   { key: 'sunday', label: 'Κυρ' },
 ];
 
-const weekKeys: WeekKey[] = Array.from(
-  { length: menu.cycleWeeks },
-  (_, i) => `week${i + 1}`
-);
+const CYCLE_WEEKS = 2;
 
 export default function HomeScreen() {
   const [darkMode, setDarkMode] = useState<boolean | null>(null);
+  const [lang, setLang] = useState<Lang>('gr');
 
   const todayKey = getTodayKey();
   const todayLabel = getTodayLabel();
@@ -68,6 +67,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     AsyncStorage.getItem('theme').then(saved => setDarkMode(saved === 'dark'));
+    AsyncStorage.getItem('lang').then(saved => { if (saved === 'en' || saved === 'gr') setLang(saved as Lang); });
   }, []);
 
   useEffect(() => {
@@ -76,8 +76,14 @@ export default function HomeScreen() {
     }
   }, [darkMode]);
 
+  useEffect(() => {
+    AsyncStorage.setItem('lang', lang);
+  }, [lang]);
+
   if (darkMode === null) return null;
 
+  const menu = buildMenu(lang);
+  const weekKeys: WeekKey[] = Array.from({ length: CYCLE_WEEKS }, (_, i) => `week${i + 1}`);
   const todayMenu: DailyMenu = (menu[selectedWeek] as WeekMenu)[selectedDay];
   const themeStyles = darkMode ? darkStyles : lightStyles;
 
@@ -89,11 +95,16 @@ export default function HomeScreen() {
           <Text style={themeStyles.headerSubtitle}>Weekly Menu</Text>
         </View>
 
-        <Pressable onPress={() => setDarkMode(v => !v)} style={styles.themeButton}>
-          <Text style={themeStyles.toggleButtonText}>
-            {darkMode ? '☀️' : '🌙'}
-          </Text>
-        </Pressable>
+        <View style={styles.headerButtons}>
+          <Pressable onPress={() => setLang(l => l === 'gr' ? 'en' : 'gr')} style={styles.langButton}>
+            <Text style={themeStyles.toggleButtonText}>{lang === 'gr' ? 'EN' : 'ΕΛ'}</Text>
+          </Pressable>
+          <Pressable onPress={() => setDarkMode(v => !v)} style={styles.themeButton}>
+            <Text style={themeStyles.toggleButtonText}>
+              {darkMode ? '☀️' : '🌙'}
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView
@@ -221,6 +232,15 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   themeButton: {
+    padding: 8,
+    borderRadius: 20,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  langButton: {
     padding: 8,
     borderRadius: 20,
   },
