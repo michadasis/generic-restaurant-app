@@ -11,6 +11,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { buildMenu, WeekMenu } from '../../data/menu';
 import { getTodayKey, getTodayLabel } from '@/utils/getToday';
 import { getCurrentWeekKey } from '@/utils/getWeek';
+import { useUpdateChecker } from '@/hooks/useUpdateChecker';
+import { UpdateModal } from '@/components/UpdateModal';
 
 type DayKey =
   | 'monday'
@@ -59,6 +61,7 @@ const CYCLE_WEEKS = 2;
 export default function HomeScreen() {
   const [darkMode, setDarkMode] = useState<boolean | null>(null);
   const [lang, setLang] = useState<Lang>('gr');
+  const { updateInfo, dismiss } = useUpdateChecker();
 
   const todayKey = getTodayKey();
   const todayLabel = getTodayLabel();
@@ -89,6 +92,9 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={[styles.root, themeStyles.container]}>
+      {updateInfo && (
+        <UpdateModal updateInfo={updateInfo} onDismiss={dismiss} darkMode={darkMode} />
+      )}
       <View style={[styles.header, themeStyles.header]}>
         <View>
           <Text style={themeStyles.headerDay}>{todayLabel}</Text>
