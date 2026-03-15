@@ -1,4 +1,4 @@
-import { menu as raw } from './restaurantMenu';
+import { menu as raw } from '../data/restaurantMenu';
 
 export interface Meal {
   first: string[];
@@ -50,5 +50,6 @@ export function buildMenu(lang: Lang): Menu {
   return result;
 }
 
-// Default: Greek. Pass 'en' to buildMenu() for English.
+export const CYCLE_WEEKS: number = raw.cycleWeeks;
+
 export const menu: Menu = buildMenu('gr');

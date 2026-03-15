@@ -6,13 +6,16 @@ import {
   StyleSheet,
   Pressable,
   SafeAreaView,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { buildMenu, WeekMenu } from '../../data/menu';
+import { buildMenu, WeekMenu, CYCLE_WEEKS } from '../../data/menu';
 import { getTodayKey, getTodayLabel } from '@/utils/getToday';
 import { getCurrentWeekKey } from '@/utils/getWeek';
 import { useUpdateChecker } from '@/hooks/useUpdateChecker';
 import { UpdateModal } from '@/components/UpdateModal';
+import { i18n, Lang } from '@/constants/i18n';
 
 type DayKey =
   | 'monday'
@@ -24,7 +27,6 @@ type DayKey =
   | 'sunday';
 
 type WeekKey = string;
-type Lang = 'gr' | 'en';
 
 interface Meal {
   first: string[];
@@ -46,17 +48,7 @@ interface CardProps {
   children: ReactNode;
 }
 
-const DAYS: { key: DayKey; label: string }[] = [
-  { key: 'monday', label: 'Δευ' },
-  { key: 'tuesday', label: 'Τρι' },
-  { key: 'wednesday', label: 'Τετ' },
-  { key: 'thursday', label: 'Πεμ' },
-  { key: 'friday', label: 'Παρ' },
-  { key: 'saturday', label: 'Σαβ' },
-  { key: 'sunday', label: 'Κυρ' },
-];
-
-const CYCLE_WEEKS = 2;
+const DAY_KEYS: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
 export default function HomeScreen() {
   const [darkMode, setDarkMode] = useState<boolean | null>(null);
@@ -93,12 +85,12 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={[styles.root, themeStyles.container]}>
       {updateInfo && (
-        <UpdateModal updateInfo={updateInfo} onDismiss={dismiss} darkMode={darkMode} />
+        <UpdateModal updateInfo={updateInfo} onDismiss={dismiss} darkMode={darkMode} lang={lang} />
       )}
       <View style={[styles.header, themeStyles.header]}>
         <View>
           <Text style={themeStyles.headerDay}>{todayLabel}</Text>
-          <Text style={themeStyles.headerSubtitle}>Weekly Menu</Text>
+          <Text style={themeStyles.headerSubtitle}>{i18n[lang].subtitle}</Text>
         </View>
 
         <View style={styles.headerButtons}>
@@ -133,7 +125,7 @@ export default function HomeScreen() {
                   active && styles.weekChipTextActive,
                 ]}
               >
-                {index + 1}η Εβδομάδα
+                {i18n[lang].week(index + 1)}
               </Text>
             </Pressable>
           );
@@ -146,12 +138,12 @@ export default function HomeScreen() {
         style={styles.selectorContainer}
         contentContainerStyle={styles.daySelector}
       >
-        {DAYS.map(day => {
-          const active = day.key === selectedDay;
+        {DAY_KEYS.map((key, index) => {
+          const active = key === selectedDay;
           return (
             <Pressable
-              key={day.key}
-              onPress={() => setSelectedDay(day.key)}
+              key={key}
+              onPress={() => setSelectedDay(key)}
               style={[styles.dayChip, active && styles.dayChipActive]}
             >
               <Text
@@ -160,7 +152,7 @@ export default function HomeScreen() {
                   active && styles.dayChipTextActive,
                 ]}
               >
-                {day.label}
+                {i18n[lang].days[index]}
               </Text>
             </Pressable>
           );
@@ -168,28 +160,28 @@ export default function HomeScreen() {
       </ScrollView>
 
       <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: 60 }]}>
-        <Section title="Lunch" themeStyles={themeStyles}>
-          <Card title="First Course" themeStyles={themeStyles}>
+        <Section title={i18n[lang].lunch} themeStyles={themeStyles}>
+          <Card title={i18n[lang].firstCourse} themeStyles={themeStyles}>
             {todayMenu.lunch.first.map((item, i) => (
               <Item key={i} text={item} themeStyles={themeStyles} />
             ))}
           </Card>
 
-          <Card title="Main Course" themeStyles={themeStyles}>
+          <Card title={i18n[lang].mainCourse} themeStyles={themeStyles}>
             {todayMenu.lunch.main.map((item, i) => (
               <Item key={i} text={item} themeStyles={themeStyles} />
             ))}
           </Card>
         </Section>
 
-        <Section title="Dinner" themeStyles={themeStyles}>
-          <Card title="First Course" themeStyles={themeStyles}>
+        <Section title={i18n[lang].dinner} themeStyles={themeStyles}>
+          <Card title={i18n[lang].firstCourse} themeStyles={themeStyles}>
             {todayMenu.dinner.first.map((item, i) => (
               <Item key={i} text={item} themeStyles={themeStyles} />
             ))}
           </Card>
 
-          <Card title="Main Course" themeStyles={themeStyles}>
+          <Card title={i18n[lang].mainCourse} themeStyles={themeStyles}>
             {todayMenu.dinner.main.map((item, i) => (
               <Item key={i} text={item} themeStyles={themeStyles} />
             ))}
@@ -232,6 +224,7 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 16,
+    paddingTop: (Platform.OS === 'android' ? StatusBar.currentHeight ?? 0 : 0) + 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

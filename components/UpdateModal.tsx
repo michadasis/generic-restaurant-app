@@ -13,10 +13,14 @@ interface Props {
   updateInfo: UpdateInfo;
   onDismiss: () => void;
   darkMode: boolean;
+  lang: Lang;
 }
 
-export function UpdateModal({ updateInfo, onDismiss, darkMode }: Props) {
+import { i18n, Lang } from '@/constants/i18n';
+
+export function UpdateModal({ updateInfo, onDismiss, darkMode, lang }: Props) {
   const themeStyles = darkMode ? darkStyles : lightStyles;
+  const t = i18n[lang];
 
   const handleDownload = () => {
     Linking.openURL(updateInfo.downloadUrl);
@@ -27,19 +31,19 @@ export function UpdateModal({ updateInfo, onDismiss, darkMode }: Props) {
     <Modal transparent animationType="fade" onRequestClose={onDismiss}>
       <View style={styles.overlay}>
         <View style={[styles.dialog, themeStyles.dialog]}>
-          <Text style={[styles.title, themeStyles.title]}>Νέα Ενημέρωση</Text>
+          <Text style={[styles.title, themeStyles.title]}>{t.updateTitle}</Text>
           <Text style={[styles.body, themeStyles.body]}>
-            Η έκδοση <Text style={themeStyles.version}>v{updateInfo.version}</Text> είναι διαθέσιμη.
+            {lang === 'gr' ? 'Η έκδοση ' : 'Version '}
+            <Text style={themeStyles.version}>v{updateInfo.version}</Text>
+            {lang === 'gr' ? ' είναι διαθέσιμη.' : ' is available.'}
           </Text>
-          <Text style={[styles.body, themeStyles.body]}>
-            Θέλεις να κατεβάσεις το νέο APK;
-          </Text>
+          <Text style={[styles.body, themeStyles.body]}>{t.updateQuestion}</Text>
           <View style={styles.buttons}>
             <Pressable style={[styles.btn, styles.btnSecondary, themeStyles.btnSecondary]} onPress={onDismiss}>
-              <Text style={[styles.btnText, themeStyles.btnSecondaryText]}>Αργότερα</Text>
+              <Text style={[styles.btnText, themeStyles.btnSecondaryText]}>{t.later}</Text>
             </Pressable>
             <Pressable style={[styles.btn, styles.btnPrimary]} onPress={handleDownload}>
-              <Text style={[styles.btnText, styles.btnPrimaryText]}>Λήψη</Text>
+              <Text style={[styles.btnText, styles.btnPrimaryText]}>{t.download}</Text>
             </Pressable>
           </View>
         </View>
@@ -75,14 +79,15 @@ const styles = StyleSheet.create({
   },
   buttons: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
     gap: 12,
     marginTop: 20,
   },
   btn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    flex: 1,
+    paddingVertical: 12,
     borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   btnPrimary: {
     backgroundColor: '#2e7d32',
