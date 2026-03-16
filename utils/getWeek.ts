@@ -3,7 +3,7 @@ import { menu, Menu } from '../data/menu';
 export const getCurrentWeekKey = (menuData?: Menu): string => {
   const data = menuData ?? menu;
   const { cycleWeeks } = data;
-  const startDate = new Date(2025, 0, 6);
+  const startDate = new Date(2025, 8, 8); // Sep 8 2025
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const diffDays = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));

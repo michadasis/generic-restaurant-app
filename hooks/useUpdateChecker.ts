@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 const GITHUB_API = 'https://api.github.com/repos/michadasis/generic-restaurant-app/releases/latest';
-export const CURRENT_VERSION = '1.4.3';
+export const CURRENT_VERSION = '1.4.4';
 
 export interface UpdateInfo {
   version: string;

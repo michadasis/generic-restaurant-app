@@ -56,7 +56,7 @@ export default function HomeScreen() {
   const { updateInfo, dismiss } = useUpdateChecker();
 
   const todayKey = getTodayKey();
-  const todayLabel = getTodayLabel();
+  const todayLabel = getTodayLabel(lang);
   const [selectedDay, setSelectedDay] = useState<DayKey>(todayKey);
   const [selectedWeek, setSelectedWeek] = useState<WeekKey>(getCurrentWeekKey());
 
