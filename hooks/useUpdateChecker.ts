@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import Constants from 'expo-constants';
 
 const GITHUB_API = 'https://api.github.com/repos/michadasis/generic-restaurant-app/releases/latest';
-export const CURRENT_VERSION = '1.4.4';
+export const CURRENT_VERSION: string = Constants.expoConfig?.version ?? '0.0.0';
 
 export interface UpdateInfo {
   version: string;

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, Pressable, Platform, StatusBar, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, Platform, StatusBar, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
 export default function AboutScreen() {
   const [darkMode, setDarkMode] = useState<boolean | null>(null);
@@ -19,6 +20,7 @@ export default function AboutScreen() {
 
   const themeStyles = darkMode ? darkStyles : lightStyles;
   const safePaddingTop = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
+  const version = Constants.expoConfig?.version ?? '—';
 
   return (
     <SafeAreaView style={[styles.root, themeStyles.container, { paddingTop: safePaddingTop }]}>
@@ -33,11 +35,13 @@ export default function AboutScreen() {
             Developed with React Native and designed for mobile devices.
           </Text>
           <Text style={themeStyles.item}>
-            Made by Michadasis Ioannis. {' '}
+            Made by Michadasis Ioannis.{' '}
             <Text style={themeStyles.link} onPress={() => Linking.openURL('https://github.com/michadasis/generic-restaurant-app')}>
-              GitHub Repo
+              GitHub
             </Text>
           </Text>
+          <View style={themeStyles.divider} />
+          <Text style={themeStyles.version}>v{version}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -47,14 +51,6 @@ export default function AboutScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 60 },
-  themeButton: {
-    marginTop: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    alignSelf: 'flex-start',
-  },
 });
 
 const lightStyles = StyleSheet.create({
@@ -65,6 +61,7 @@ const lightStyles = StyleSheet.create({
   item: { fontSize: 16, color: '#222', marginBottom: 8, lineHeight: 22 },
   toggleButtonText: { fontSize: 16, color: '#111' },
   link: { color: '#2e7d32', fontWeight: '600', textDecorationLine: 'underline' },
+  version: { fontSize: 13, color: '#999', textAlign: 'center', marginTop: 4 },
 });
 
 const darkStyles = StyleSheet.create({
@@ -75,4 +72,5 @@ const darkStyles = StyleSheet.create({
   item: { fontSize: 16, color: '#eee', marginBottom: 8, lineHeight: 22 },
   toggleButtonText: { fontSize: 16, color: '#fff' },
   link: { color: '#81c784', fontWeight: '600', textDecorationLine: 'underline' },
+  version: { fontSize: 13, color: '#666', textAlign: 'center', marginTop: 4 },
 });
