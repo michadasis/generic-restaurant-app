@@ -13,19 +13,19 @@
       "bundleIdentifier": "com.michadasis.restaurantapp",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
-    },
-    "android": {
-      "package": "com.michadasis.restaurantapp",
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/icon.png",
-        "backgroundImage": "./assets/images/background.png",
-        "monochromeImage": "./assets/images/monochrome.png"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
-    },
+    }
+  },
+"android": {
+  "package": "com.michadasis.restaurantapp",
+  "adaptiveIcon": {
+    "backgroundColor": "#E6F4FE",
+   "foregroundImage": "./assets/images/icon.png",
+    "backgroundImage": "./assets/images/background.png",
+    "monochromeImage": "./assets/images/monochrome.png"
+  },
+  "edgeToEdgeEnabled": true,
+  "predictiveBackGestureEnabled": false
+},
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
@@ -43,8 +43,7 @@
             "backgroundColor": "#181818"
           }
         }
-      ],
-      "react-native-android-widget"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
