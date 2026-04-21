@@ -1,53 +1,57 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
+// Color palette derived from the UoWM Canteen logo
+// Teal background + amber/gold accents
 
-import { Platform } from 'react-native';
+export const palette = {
+  teal:       '#0e9bb5',   // logo background teal
+  tealDark:   '#0a7a90',   // deeper teal for pressed states
+  tealLight:  '#e6f7fb',   // light teal tint for light mode
+  amber:      '#d4a843',   // logo gold/amber accent
+  amberLight: '#f5d98b',   // lighter amber
+  amberDark:  '#a87e28',   // deeper amber
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
-export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-  },
+  // Neutrals
+  black:      '#0d0d0d',
+  dark1:      '#151515',
+  dark2:      '#1e1e1e',
+  dark3:      '#2a2a2a',
+  dark4:      '#363636',
+  gray1:      '#666666',
+  gray2:      '#999999',
+  gray3:      '#cccccc',
+  white:      '#ffffff',
+  offWhite:   '#f5f5f0',
+  light1:     '#ebebeb',
+  light2:     '#d8d8d8',
 };
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});
+export const darkTheme = {
+  bg:         palette.dark1,
+  surface:    palette.dark2,
+  surfaceAlt: palette.dark3,
+  border:     palette.dark4,
+  accent:     palette.teal,
+  accentAlt:  palette.amber,
+  textPrimary:   palette.white,
+  textSecondary: palette.gray3,
+  textMuted:     palette.gray2,
+};
+
+export const lightTheme = {
+  bg:         palette.offWhite,
+  surface:    palette.white,
+  surfaceAlt: palette.light1,
+  border:     palette.light2,
+  accent:     palette.teal,
+  accentAlt:  palette.amber,
+  textPrimary:   palette.black,
+  textSecondary: '#333333',
+  textMuted:     palette.gray1,
+};
+
+export type Theme = typeof darkTheme;
+
+// Legacy compat for _layout.tsx
+export const Colors = {
+  light: { tint: palette.teal, text: palette.black, background: palette.offWhite, icon: palette.gray1, tabIconDefault: palette.gray1, tabIconSelected: palette.teal },
+  dark:  { tint: palette.teal, text: palette.white, background: palette.dark1,    icon: palette.gray2, tabIconDefault: palette.gray2, tabIconSelected: palette.teal },
+};
