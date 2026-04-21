@@ -24,7 +24,7 @@ export const i18n = {
     aboutTitle: 'Σχετικά με την εφαρμογή',
     aboutDesc1: 'Η εφαρμογή αναπτύχθηκε για τους φοιτητές του Πανεπιστημίου Δυτικής Μακεδονίας, ώστε να έχουν πιο εύκολη πρόσβαση στο εβδομαδιαίο μενού.',
     aboutDesc2: 'Αναπτύχθηκε με React Native (Expo) και σχεδιάστηκε για κινητά.',
-    aboutDesc3: 'Προγραμματίστηκε απο τον Μιχαδάση Ιωάννη, λογότυπο σχεδιασμένο απο την Κατερίνα Μάκη.',
+    aboutDesc3: 'Προγραμματίστηκε απο τον Μιχαδάση Ιωάννη, λογότυπο σχεδιασμένο απο την Μάκη Κατερίνα.',
     aboutGithub: 'GitHub',
     // Tab labels
     tabHome:  'Αρχική',
@@ -53,7 +53,7 @@ export const i18n = {
     aboutTitle: 'About this app',
     aboutDesc1: "This app was developed for the University of Western Macedonia's students to have easier access to the weekly menu.",
     aboutDesc2: 'Developed with React Native and designed for mobile devices.',
-    aboutDesc3: 'Programmed by Michadasis Ioannis, logo designed by Katerina Maki.',
+    aboutDesc3: 'Programmed by Michadasis Ioannis, logo designed by Maki Katerina.',
     aboutGithub: 'GitHub',
     // Tab labels
     tabHome:  'Home',
