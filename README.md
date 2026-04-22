@@ -94,6 +94,7 @@ eas build --platform android --profile production
 ## Credits
 
 Developed by [**Ioannis Michadasis**](https://github.com/michadasis).
+
 Logo designed by **Katerina Maki**.
 
 ## License
