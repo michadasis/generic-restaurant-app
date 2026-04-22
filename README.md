@@ -32,12 +32,12 @@ Download the latest `.apk` from the [releases page](https://github.com/michadasi
 
 ## Features
 
-- **Automatic week detection** — calculates the current cycle week based on the date
-- **Swipeable cards** — swipe left/right to change day; reaching the end of the week automatically moves to the next
-- **Dark / Light mode** — toggle with one tap, preference saved locally
-- **Greek / English** — switch language with the press of a button
-- **Auto updater** — shows a popup when a new version is available on GitHub
-- **UoWM theme palette** — teal & amber color scheme inspired by the UoWM logo
+- **Automatic week detection** - calculates the current cycle week based on the date
+- **Swipeable cards** - swipe left/right to change day; reaching the end of the week automatically moves to the next
+- **Dark / Light mode** - toggle with one tap, preference saved locally
+- **Greek / English** - switch language with the press of a button
+- **Auto updater** - shows a popup when a new version is available on GitHub
+- **UoWM theme palette** - teal & amber color scheme inspired by the UoWM logo
 
 ## Project Structure
 
@@ -99,4 +99,4 @@ Logo designed by **Katerina Maki**.
 
 ## License
 
-MIT — see [LICENSE](./LICENSE) for details.
+MIT - see [LICENSE](./LICENSE) for details.
