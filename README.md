@@ -1,109 +1,101 @@
-# UoWM Restaurant Menu App
+<div align="center">
+  <img src="assets/images/icon.png" width="100" style="border-radius: 20px" />
+  <h1>UoWM Restaurant Menu App</h1>
+  <p>The weekly menu of the University of Western Macedonia's restaurant, right in your pocket.</p>
 
-A React Native mobile application for viewing the weekly dining menu of the University of Western Macedonia (UoWM) restaurant. The app automatically determines the correct week in the menu cycle based on the current date, supports full dark and light mode theming, and provides a scrollable day selector for quick navigation.
+  <a href="https://github.com/michadasis/generic-restaurant-app/releases">
+    <img src="https://img.shields.io/github/v/release/michadasis/generic-restaurant-app?style=flat-square&color=0e9bb5" alt="Latest Release" />
+  </a>
+  <img src="https://img.shields.io/badge/platform-Android-3ddc84?style=flat-square" alt="Android" />
+  <img src="https://img.shields.io/badge/Expo-54-000020?style=flat-square&logo=expo" alt="Expo" />
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178c6?style=flat-square&logo=typescript" alt="TypeScript" />
+</div>
 
-Built with Expo and TypeScript. Currently available for Android only.
+---
+
+## What it does
+
+Displays the lunch and dinner menu for each day of the week. The app automatically determines which week of the 2-week cycle you're in and opens on today's menu.
 
 ## Screenshots
 
-<div style="display:flex; gap:8px;">
-  <img src="assets/images/Light.jpg" width="300"/>
-  <img src="assets/images/Dark.jpg" width="300"/>
+<div align="center">
+  <img src="assets/images/Dark.jpg" width="220" />
+  <img src="assets/images/Light.jpg" width="220" />
 </div>
-
-## Features
-
-**Menu Display**
-Each day shows a structured view of breakfast, lunch, and dinner. Meals are organized into first courses, main courses, and extras such as fruit or dessert. Breakfast items are constant across the entire school year.
-
-**Automatic Week Detection**
-The app uses a 2-week rotating cycle spanning the full academic year (September 2025 through June 2026, covering 40 school weeks). On launch it calculates which week in the cycle is currently active and displays that week's menu without any user input.
-
-**Day Navigation**
-A horizontally scrollable tab bar lists all seven days of the week. The app opens on the current day by default, and tapping any day instantly switches the displayed menu.
-
-**Dark and Light Theme**
-The app respects the system color scheme and switches automatically between dark and light appearances. Theme preference is persisted across sessions using AsyncStorage.
 
 ## Installation
 
-Download the latest `.apk` from the [releases page](https://github.com/michadasis/generic-restaurant-app/releases) and install it on any Android device.
+Download the latest `.apk` from the [releases page](https://github.com/michadasis/generic-restaurant-app/releases) and install it on your Android device.
 
-iOS is not currently supported.
+> Android only. iOS is not supported.
 
-## Development Setup
+## Features
 
-**Prerequisites**
-
-Node.js 18 or later and the Expo CLI are required. Install dependencies with:
-
-```bash
-git clone https://github.com/michadasis/generic-restaurant-app.git
-cd generic-restaurant-app
-npm install
-```
-
-**Running the app**
-
-```bash
-npx expo start
-```
-
-This opens the Expo developer menu. From there you can launch the app in an Android emulator, iOS simulator, or on a physical device using the Expo Go app.
-
-To run directly on a connected Android device or emulator:
-
-```bash
-npx expo start --android
-```
-
-**Building a release APK**
-
-This project is configured for EAS Build. To produce a standalone APK:
-
-```bash
-npx eas build --platform android --profile preview
-```
+- **Automatic week detection** — calculates the current cycle week based on the date
+- **Swipeable cards** — swipe left/right to change day; reaching the end of the week automatically moves to the next
+- **Dark / Light mode** — toggle with one tap, preference saved locally
+- **Greek / English** — switch language with the press of a button
+- **Auto-updater** — shows a popup when a new version is available on GitHub
+- **Logo-matched palette** — teal & amber color scheme inspired by the UoWM logo
 
 ## Project Structure
 
 ```
 app/
   (tabs)/
-    index.tsx       Main menu screen
-    About.tsx       About screen
-    _layout.tsx     Tab navigation layout
-  _layout.tsx       Root layout with theme provider
+    index.tsx        Main menu screen
+    About.tsx        About screen
+    _layout.tsx      Tab navigation
+  _layout.tsx        Root layout
 
-components/         Reusable UI components (ThemedText, ThemedView, etc.)
+components/
+  UpdateModal.tsx    Update notification popup
+
 constants/
-  theme.ts          Color and font definitions for light and dark modes
+  i18n.ts            All UI strings (GR + EN)
+  theme.ts           Colors & theme objects
+
 data/
-  menu.ts           Full 2-week menu cycle with TypeScript interfaces
+  menu.ts            TypeScript interfaces + buildMenu()
+  restaurantMenu.js  Raw menu data
+
 hooks/
-  use-color-scheme  System color scheme detection (native and web)
+  useUpdateChecker.ts  GitHub release checker
+
 utils/
-  getToday.ts       Returns the current day key and Greek label
-  getWeek.ts        Calculates the active week in the menu rotation cycle
+  getToday.ts        Current day key and label
+  getWeek.ts         Current week in the cycle
 ```
 
-## Menu Data
+## Development
 
-The menu is defined in `data/menu.ts` as a statically typed TypeScript object. It encodes a 2-week cycle used for the entire 2025 to 2026 academic year. Each day contains a `lunch` object, a `dinner` object, and an `extra` field. Lunch and dinner each have `first` and `main` arrays holding the course options for that meal. The week currently shown is computed at runtime by `utils/getWeek.ts` based on a fixed reference start date.
+> Requires [EAS CLI](https://docs.expo.dev/eas/): `npm i -g eas-cli`
 
-To update the menu for a new school year, replace the `week1` and `week2` objects in `data/menu.ts` and update the `startDate` value in `utils/getWeek.ts`.
+```bash
+git clone https://github.com/michadasis/generic-restaurant-app.git
+cd generic-restaurant-app
+npm i
+npm run start
+```
 
-## Tech Stack
+**Build for testing (.apk):**
 
-| Technology | Version |
-|---|---|
-| React Native | 0.81 |
-| Expo | 54 |
-| Expo Router | 6 |
-| TypeScript | 5.9 |
-| React Navigation | 7 |
-| AsyncStorage | 2.2 |
+```bash
+eas build --platform android --profile preview
+```
+
+**Build for production:**
+
+```bash
+eas build --platform android --profile production
+```
+
+## Credits
+
+Developed by [**Ioannis Michadasis**](https://github.com/michadasis).
+Logo designed by **Katerina Maki**.
 
 ## License
 
-MIT. See [LICENSE](./LICENSE) for details.
+MIT — see [LICENSE](./LICENSE) for details.
