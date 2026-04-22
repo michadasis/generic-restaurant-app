@@ -56,7 +56,10 @@ export default function AboutScreen() {
 
         {/* University badge */}
         <View style={[s.uniBadge, { backgroundColor: palette.teal + '18' }]}>
-          <Text style={[s.uniText, { color: palette.teal }]}>
+          <Text 
+          style={[s.uniText, { color: palette.teal }]}
+          onPress={() => Linking.openURL('https://www.uowm.gr/')}
+          >
             {lang === 'gr' ? 'Πανεπιστήμιο Δυτικής Μακεδονίας' : 'University of Western Macedonia'}
           </Text>
         </View>

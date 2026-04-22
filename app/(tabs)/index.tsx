@@ -22,9 +22,10 @@ import { i18n, Lang } from '@/constants/i18n';
 import { darkTheme, lightTheme, palette, type Theme } from '@/constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const PEEK = 28;
-const CARD_GAP = 10;
-const CARD_WIDTH = SCREEN_WIDTH - PEEK * 2 - CARD_GAP;
+const PEEK = 24;
+const CARD_GAP = 12;
+const CARD_WIDTH = SCREEN_WIDTH - PEEK * 2;
+const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
 
 type DayKey = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 const DAY_KEYS: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -83,7 +84,7 @@ export default function HomeScreen() {
 
   const onScrollEnd = (e: any) => {
     const offsetX = e.nativeEvent.contentOffset.x;
-    const idx     = Math.round(offsetX / (CARD_WIDTH + CARD_GAP));
+    const idx     = Math.round(offsetX / SNAP_INTERVAL);
     const clamped = Math.max(0, Math.min(idx, DAY_KEYS.length - 1));
     const swipedRight = offsetX >= lastOffsetX.current;
     const swipedLeft  = offsetX <= lastOffsetX.current;
@@ -110,7 +111,7 @@ export default function HomeScreen() {
 
   const renderCard = ({ item: dayKey, index }: { item: DayKey; index: number }) => {
     const dayMenu = (menu[selectedWeek] as WeekMenu)?.[dayKey] as DayMenu & { extra?: string[] };
-    const isToday = dayKey === todayKey;
+    const isToday = dayKey === todayKey && selectedWeek === getCurrentWeekKey();
     const dateStr = getDayDate(dayKey);
     const fullDay = t.fullDays[index];
 
@@ -210,12 +211,12 @@ export default function HomeScreen() {
               }}
               style={s.dotWrap}
             >
-              <Text style={[s.dotLabel, { color: key === todayKey ? palette.amber : th.textMuted }]}>
+              <Text style={[s.dotLabel, { color: isActive ? palette.teal : key === todayKey && selectedWeek === getCurrentWeekKey() ? palette.amber : th.textMuted }]}>
                 {t.days[i]}
               </Text>
               <View style={[
                 s.dot,
-                { backgroundColor: key === todayKey ? palette.amber : th.border },
+                { backgroundColor: key === todayKey && selectedWeek === getCurrentWeekKey() ? palette.amber : th.border },
                 isActive && { backgroundColor: palette.teal, transform: [{ scale: 1.3 }] },
               ]} />
             </Pressable>
@@ -231,13 +232,13 @@ export default function HomeScreen() {
         keyExtractor={k => k}
         horizontal
         showsHorizontalScrollIndicator={false}
-        snapToInterval={CARD_WIDTH + CARD_GAP}
-        snapToAlignment="center"
+        snapToInterval={SNAP_INTERVAL}
+        snapToAlignment="start"
         decelerationRate="fast"
-        contentContainerStyle={{ paddingHorizontal: PEEK }}
+        contentContainerStyle={{ paddingHorizontal: PEEK - CARD_GAP / 2 }}
         ItemSeparatorComponent={() => <View style={{ width: CARD_GAP }} />}
         onMomentumScrollEnd={onScrollEnd}
-        getItemLayout={(_, i) => ({ length: CARD_WIDTH + CARD_GAP, offset: (CARD_WIDTH + CARD_GAP) * i, index: i })}
+        getItemLayout={(_, i) => ({ length: SNAP_INTERVAL, offset: SNAP_INTERVAL * i, index: i })}
         style={{ flex: 1, marginTop: 8 }}
       />
     </SafeAreaView>

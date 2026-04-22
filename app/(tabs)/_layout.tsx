@@ -25,7 +25,7 @@ export default function TabLayout() {
   const bg            = dark ? '#151515' : '#f5f5f0';
   const border        = dark ? '#2a2a2a' : '#e0e0e0';
   const inactiveColor = dark ? '#666' : '#999';
-  const bottomPad     = Math.max(insets.bottom, 8);
+  const bottomPad = insets.bottom;
 
   return (
     <Tabs
@@ -38,9 +38,13 @@ export default function TabLayout() {
           backgroundColor: bg,
           borderTopColor: border,
           borderTopWidth: 1,
-          height: 48 + bottomPad,
-          paddingBottom: bottomPad,
+          height: 56 + bottomPad,
+          paddingBottom: bottomPad + 4,
           paddingTop: 6,
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
         },
         tabBarLabelStyle: {
           fontSize: 11,
