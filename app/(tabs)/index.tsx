@@ -24,7 +24,7 @@ import { darkTheme, lightTheme, palette, type Theme } from '@/constants/theme';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const PEEK = 24;
 const CARD_GAP = 12;
-const CARD_WIDTH = SCREEN_WIDTH - PEEK * 2;
+const CARD_WIDTH = SCREEN_WIDTH - PEEK * 2 - CARD_GAP;
 const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
 
 type DayKey = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
@@ -232,10 +232,10 @@ export default function HomeScreen() {
         keyExtractor={k => k}
         horizontal
         showsHorizontalScrollIndicator={false}
-        snapToInterval={SNAP_INTERVAL}
+        snapToOffsets={DAY_KEYS.map((_, i) => i * SNAP_INTERVAL)}
         snapToAlignment="start"
         decelerationRate="fast"
-        contentContainerStyle={{ paddingHorizontal: PEEK - CARD_GAP / 2 }}
+        contentContainerStyle={{ paddingHorizontal: PEEK }}
         ItemSeparatorComponent={() => <View style={{ width: CARD_GAP }} />}
         onMomentumScrollEnd={onScrollEnd}
         getItemLayout={(_, i) => ({ length: SNAP_INTERVAL, offset: SNAP_INTERVAL * i, index: i })}
