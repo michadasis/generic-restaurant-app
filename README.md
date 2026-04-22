@@ -36,8 +36,8 @@ Download the latest `.apk` from the [releases page](https://github.com/michadasi
 - **Swipeable cards** — swipe left/right to change day; reaching the end of the week automatically moves to the next
 - **Dark / Light mode** — toggle with one tap, preference saved locally
 - **Greek / English** — switch language with the press of a button
-- **Auto-updater** — shows a popup when a new version is available on GitHub
-- **Logo-matched palette** — teal & amber color scheme inspired by the UoWM logo
+- **Auto updater** — shows a popup when a new version is available on GitHub
+- **UoWM theme palette** — teal & amber color scheme inspired by the UoWM logo
 
 ## Project Structure
 
