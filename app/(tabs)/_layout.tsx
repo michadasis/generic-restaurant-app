@@ -14,11 +14,16 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    AsyncStorage.multiGet(['theme', 'lang']).then(pairs => {
-      const map = Object.fromEntries(pairs);
-      if (map.theme !== null) setDark(map.theme === 'dark');
-      if (map.lang === 'en' || map.lang === 'gr') setLang(map.lang as Lang);
-    });
+    const sync = () => {
+      AsyncStorage.multiGet(['theme', 'lang']).then(pairs => {
+        const map = Object.fromEntries(pairs);
+        if (map.theme !== null) setDark(map.theme === 'dark');
+        if (map.lang === 'en' || map.lang === 'gr') setLang(map.lang as Lang);
+      });
+    };
+    sync();
+    const interval = setInterval(sync, 500);
+    return () => clearInterval(interval);
   }, []);
 
   const t             = i18n[lang];

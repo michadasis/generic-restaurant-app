@@ -22,9 +22,9 @@ import { i18n, Lang } from '@/constants/i18n';
 import { darkTheme, lightTheme, palette, type Theme } from '@/constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const PEEK = 24;
-const CARD_GAP = 12;
-const CARD_WIDTH = SCREEN_WIDTH - PEEK * 2 - CARD_GAP;
+const PEEK = 20;
+const CARD_GAP = 10;
+const CARD_WIDTH = SCREEN_WIDTH - PEEK * 2;
 const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
 
 type DayKey = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
@@ -233,10 +233,8 @@ export default function HomeScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         snapToOffsets={DAY_KEYS.map((_, i) => i * SNAP_INTERVAL)}
-        snapToAlignment="start"
         decelerationRate="fast"
-        contentContainerStyle={{ paddingHorizontal: PEEK }}
-        ItemSeparatorComponent={() => <View style={{ width: CARD_GAP }} />}
+        contentContainerStyle={{ paddingLeft: PEEK, paddingRight: PEEK - CARD_GAP }}
         onMomentumScrollEnd={onScrollEnd}
         getItemLayout={(_, i) => ({ length: SNAP_INTERVAL, offset: SNAP_INTERVAL * i, index: i })}
         style={{ flex: 1, marginTop: 8 }}
@@ -245,7 +243,7 @@ export default function HomeScreen() {
   );
 }
 
-// Subcomponents
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 function MealSection({
   label, meal, extra, t, th,
@@ -311,7 +309,7 @@ const s = StyleSheet.create({
   dotLabel:   { fontSize: 10, fontWeight: '600' },
   dot:        { width: 6, height: 6, borderRadius: 3 },
   // Card
-  card:       { borderRadius: 20, overflow: 'hidden' },
+  card:       { borderRadius: 20, overflow: 'hidden', marginRight: CARD_GAP },
   cardContent:{ padding: 18, paddingBottom: 40 },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', borderBottomWidth: 1, paddingBottom: 12, marginBottom: 14 },
   cardDay:    { fontSize: 18, fontWeight: '800', letterSpacing: -0.3 },
