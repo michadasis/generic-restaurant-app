@@ -110,7 +110,7 @@ export default function HomeScreen() {
   };
 
   const renderCard = ({ item: dayKey, index }: { item: DayKey; index: number }) => {
-    const dayMenu = (menu[selectedWeek] as WeekMenu)?.[dayKey] as DayMenu & { extra?: string[] };
+    const dayMenu = (menu[selectedWeek] as WeekMenu)?.[dayKey] as DayMenu;
     const isToday = dayKey === todayKey && selectedWeek === getCurrentWeekKey();
     const dateStr = getDayDate(dayKey);
     const fullDay = t.fullDays[index];
@@ -137,20 +137,9 @@ export default function HomeScreen() {
 
         {dayMenu ? (
           <>
-            <MealSection label={t.lunch} meal={dayMenu.lunch} t={t} th={th} />
+            <MealSection label={t.lunch} meal={dayMenu.lunch} extra={dayMenu.lunchExtra} t={t} th={th} />
             <View style={[s.sectionDivider, { backgroundColor: th.border }]} />
-            <MealSection label={t.dinner} meal={dayMenu.dinner} t={t} th={th} />
-            {dayMenu.extra && dayMenu.extra.length > 0 && (
-              <>
-                <View style={[s.sectionDivider, { backgroundColor: th.border }]} />
-                <View style={s.mealSection}>
-                  <Text style={[s.mealSectionLabel, { color: palette.amber }]}>{t.extra}</Text>
-                  {dayMenu.extra.map((item: string, i: number) => (
-                    <Text key={i} style={[s.mealItem, { color: th.textSecondary }]}>{item}</Text>
-                  ))}
-                </View>
-              </>
-            )}
+            <MealSection label={t.dinner} meal={dayMenu.dinner} extra={dayMenu.dinnerExtra} t={t} th={th} />
           </>
         ) : (
           <Text style={[s.noData, { color: th.textMuted }]}>—</Text>
@@ -165,7 +154,7 @@ export default function HomeScreen() {
         <UpdateModal updateInfo={updateInfo} onDismiss={dismiss} darkMode={dark} lang={lang} />
       )}
 
-      {/* Header */}
+      {/* ── Header ── */}
       <View style={s.header}>
         <View style={s.headerLeft}>
           <Image source={require('../../assets/images/icon.png')} style={s.logoImg} />
@@ -184,7 +173,7 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Week indicator */}
+      {/* ── Week indicator ── */}
       <View style={[s.weekBar, { backgroundColor: th.surfaceAlt }]}>
         <Pressable onPress={() => cycleWeek(-1, currentIndexRef.current)} style={s.weekArrow}>
           <Text style={[s.weekArrowText, { color: palette.teal }]}>‹</Text>
@@ -197,7 +186,7 @@ export default function HomeScreen() {
         </Pressable>
       </View>
 
-      {/* Day dots */}
+      {/* ── Day dots ── */}
       <View style={s.dotRow}>
         {DAY_KEYS.map((key, i) => {
           const isActive = i === currentDayIndex;
@@ -224,7 +213,7 @@ export default function HomeScreen() {
         })}
       </View>
 
-      {/* Cards */}
+      {/* ── Cards ── */}
       <FlatList
         ref={flatListRef}
         data={DAY_KEYS}
@@ -265,7 +254,7 @@ function MealSection({
 
       {meal.first.length > 0 && (
         <>
-          <Text style={[s.mealSubLabel, { color: th.textMuted, marginTop: 10 }]}>{t.firstCourse}</Text>
+          <Text style={[s.mealSubLabel, { color: th.textMuted, marginTop: 6 }]}>{t.firstCourse}</Text>
           {meal.first.map((item, i) => (
             <Text key={i} style={[s.mealItem, { color: th.textSecondary }]}>{item}</Text>
           ))}
@@ -274,7 +263,7 @@ function MealSection({
 
       {extra && extra.length > 0 && (
         <>
-          <Text style={[s.mealSubLabel, { color: th.textMuted, marginTop: 10 }]}>{t.extra}</Text>
+          <Text style={[s.mealSubLabel, { color: th.textMuted, marginTop: 6 }]}>{t.extra}</Text>
           {extra.map((item, i) => (
             <Text key={i} style={[s.mealItem, { color: th.textSecondary }]}>{item}</Text>
           ))}
@@ -284,7 +273,7 @@ function MealSection({
   );
 }
 
-// Styles
+// ── Styles ────────────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
   root:       { flex: 1 },
@@ -310,17 +299,17 @@ const s = StyleSheet.create({
   dot:        { width: 6, height: 6, borderRadius: 3 },
   // Card
   card:       { borderRadius: 20, overflow: 'hidden', marginRight: CARD_GAP },
-  cardContent:{ padding: 18, paddingBottom: 40 },
-  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', borderBottomWidth: 1, paddingBottom: 12, marginBottom: 14 },
-  cardDay:    { fontSize: 18, fontWeight: '800', letterSpacing: -0.3 },
-  cardDate:   { fontSize: 12, marginTop: 2 },
-  todayBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
-  todayBadgeText: { fontSize: 11, fontWeight: '800', color: '#1a1a1a' },
-  sectionDivider: { height: 1, marginVertical: 14 },
+  cardContent:{ padding: 12, paddingBottom: 16 },
+  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', borderBottomWidth: 1, paddingBottom: 8, marginBottom: 10 },
+  cardDay:    { fontSize: 15, fontWeight: '800', letterSpacing: -0.3 },
+  cardDate:   { fontSize: 11, marginTop: 1 },
+  todayBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  todayBadgeText: { fontSize: 10, fontWeight: '800', color: '#1a1a1a' },
+  sectionDivider: { height: 1, marginVertical: 7 },
   noData:     { textAlign: 'center', marginTop: 40, fontSize: 14 },
   // Meal
-  mealSection:   { marginBottom: 4 },
-  mealSectionLabel: { fontSize: 15, fontWeight: '800', marginBottom: 8, letterSpacing: 0.2 },
-  mealSubLabel:  { fontSize: 10, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 4 },
-  mealItem:      { fontSize: 13, lineHeight: 20, marginBottom: 2 },
+  mealSection:   { marginBottom: 2 },
+  mealSectionLabel: { fontSize: 13, fontWeight: '800', marginBottom: 4, letterSpacing: 0.2 },
+  mealSubLabel:  { fontSize: 9, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 2 },
+  mealItem:      { fontSize: 12, lineHeight: 16, marginBottom: 1 },
 });

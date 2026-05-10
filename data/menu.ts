@@ -8,7 +8,8 @@ export interface Meal {
 export interface DayMenu {
   lunch: Meal;
   dinner: Meal;
-  extra: string[];
+  lunchExtra: string[];
+  dinnerExtra: string[];
 }
 
 export type WeekMenu = {
@@ -33,9 +34,10 @@ function transformWeek(week: any, lang: Lang): WeekMenu {
   const result: WeekMenu = {};
   for (const day of Object.keys(week)) {
     result[day] = {
-      lunch: transformMeal(week[day].lunch, lang),
-      dinner: transformMeal(week[day].dinner, lang),
-      extra: week[day].extra[lang],
+      lunch:       transformMeal(week[day].lunch, lang),
+      dinner:      transformMeal(week[day].dinner, lang),
+      lunchExtra:  week[day].lunchExtra?.[lang]  ?? [],
+      dinnerExtra: week[day].dinnerExtra?.[lang] ?? [],
     };
   }
   return result;
