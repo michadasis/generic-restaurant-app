@@ -31,7 +31,7 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
-      # --- Everything below only runs if app.json's version is new ---
+      # Everything below only runs if app.json's version is new
 
       - name: Read app version
         id: app_version
@@ -65,7 +65,7 @@ jobs:
           cat eas-build.json
           STATUS=$(node -p "JSON.parse(require('fs').readFileSync('eas-build.json','utf8'))[0].status")
           echo "EAS build status: $STATUS"
-          if [ "$STATUS" != "finished" ]; then
+          if [ "$STATUS" != "FINISHED" ]; then
             echo "Build did not finish successfully, aborting before any release is created."
             exit 1
           fi
