@@ -1,21 +1,16 @@
 <div align="center">
   <img src="assets/images/icon.png" width="100" style="border-radius: 20px" />
   <h1>UoWM Restaurant Menu App</h1>
-  <p>The weekly menu of the University of Western Macedonia's restaurant, right in your pocket.</p>
-
-  <a href="https://github.com/michadasis/generic-restaurant-app/releases">
-    <img src="https://img.shields.io/github/v/release/michadasis/generic-restaurant-app?style=flat-square&color=0e9bb5" alt="Latest Release" />
-  </a>
-  <img src="https://img.shields.io/badge/platform-Android-3ddc84?style=flat-square" alt="Android" />
-  <img src="https://img.shields.io/badge/Expo-54-000020?style=flat-square&logo=expo" alt="Expo" />
-  <img src="https://img.shields.io/badge/TypeScript-5.9-3178c6?style=flat-square&logo=typescript" alt="TypeScript" />
+  <p>The weekly menu for the University of Western Macedonia's student restaurant, in your pocket instead of taped to a wall.</p>
 </div>
 
----
+## Why this exists
+
+The restaurant menu used to live on a printed sheet near the entrance, or buried somewhere on the university site. This app just puts it on your phone. Open it and you immediately see what's being served today, for both lunch and dinner.
 
 ## What it does
 
-Displays the lunch and dinner menu for each day of the week. The app automatically determines which week of the 2-week cycle you're in and opens on today's menu.
+The menu runs on a two week cycle, and the app figures out on its own which week you're currently in, so you never have to think about it. It opens straight to today's menu. From there you can swipe left or right to move through the rest of the week, and if you keep swiping past the last day it just rolls into the next week for you.
 
 ## Screenshots
 
@@ -26,51 +21,59 @@ Displays the lunch and dinner menu for each day of the week. The app automatical
 
 ## Installation
 
-Download the latest `.apk` from the [releases page](https://github.com/michadasis/generic-restaurant-app/releases) and install it on your Android device.
+Grab the latest APK from the releases page and install it on your Android phone.
 
-> Android only. iOS is not supported.
+https://github.com/michadasis/generic-restaurant-app/releases
+
+It's Android only for now. There's no iOS build.
 
 ## Features
 
-- **Automatic week detection** - calculates the current cycle week based on the date
-- **Swipeable cards** - swipe left/right to change day; reaching the end of the week automatically moves to the next
-- **Dark / Light mode** - toggle with one tap, preference saved locally
-- **Greek / English** - switch language with the press of a button
-- **Auto updater** - shows a popup when a new version is available on GitHub
-- **UoWM theme palette** - teal & amber color scheme inspired by the UoWM logo
+* Figures out the current week in the cycle on its own, based on today's date
+* Swipe through the days, with the week rolling over automatically at the edges
+* Dark mode and light mode, switchable with one tap, remembered for next time
+* Greek and English, switchable the same way
+* Checks GitHub on launch and lets you know if a newer version is out
+* Colors pulled from the actual UoWM logo, teal and amber
 
-## Project Structure
+## How the code is laid out
 
 ```
 app/
   (tabs)/
-    index.tsx        Main menu screen
-    About.tsx        About screen
-    _layout.tsx      Tab navigation
-  _layout.tsx        Root layout
+    index.tsx       the main menu screen, this is where most of the logic lives
+    About.tsx        the about screen
+    _layout.tsx      tab navigation
+  _layout.tsx        root layout
 
 components/
-  UpdateModal.tsx    Update notification popup
+  UpdateModal.tsx    the popup that shows up when a new version is available
 
 constants/
-  i18n.ts            All UI strings (GR + EN)
-  theme.ts           Colors & theme objects
+  i18n.ts            every bit of text in the app, Greek and English
+  theme.ts           the color palette and the dark and light theme objects
 
 data/
-  menu.ts            TypeScript interfaces + buildMenu()
-  restaurantMenu.js  Raw menu data
+  menu.ts            types plus the function that builds the menu for a given language
+  restaurantMenu.js   the raw menu content itself
 
 hooks/
-  useUpdateChecker.ts  GitHub release checker
+  useUpdateChecker.ts  checks the GitHub releases API for a newer version
 
 utils/
-  getToday.ts        Current day key and label
-  getWeek.ts         Current week in the cycle
+  getToday.ts        works out today's day and its label
+  getWeek.ts          works out which week of the cycle we're in
 ```
 
-## Development
+## Running it yourself
 
-> Requires [EAS CLI](https://docs.expo.dev/eas/): `npm i -g eas-cli`
+You'll need the EAS CLI installed globally first.
+
+```bash
+npm i -g eas-cli
+```
+
+Then clone the repo and start it up.
 
 ```bash
 git clone https://github.com/michadasis/generic-restaurant-app.git
@@ -79,24 +82,24 @@ npm i
 npm run start
 ```
 
-**Build for testing (.apk):**
+To build an APK for testing:
 
 ```bash
 eas build --platform android --profile preview
 ```
 
-**Build for production:**
+To build the production version:
 
 ```bash
 eas build --platform android --profile production
 ```
 
+## Updating the menu
+
+The actual menu text lives in `data/restaurantMenu.js`. Each week has a Greek and an English version for every meal, so updating it for a new cycle just means editing that one file.
+
 ## Credits
 
-Developed by [**Ioannis Michadasis**](https://github.com/michadasis).
+Built by [Ioannis Michadasis](github.com/michadasis).
 
-Logo designed by **Katerina Maki**.
-
-## License
-
-MIT - see [LICENSE](./LICENSE) for details.
+Logo by Katerina Maki.
