@@ -26,8 +26,7 @@ const PEEK = 20;
 const CARD_GAP = 10;
 const CARD_WIDTH = SCREEN_WIDTH - PEEK * 2;
 const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
-// Cards size themselves to their content instead of stretching to fill the screen, this cap is just a safety net for unusually long menu text
-const CARD_MAX_HEIGHT = SCREEN_HEIGHT * 0.72;
+const CARD_HEIGHT = SCREEN_HEIGHT * 0.6;
 
 type DayKey = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 const DAY_KEYS: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -175,7 +174,7 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* ── Week indicator ── */}
+      {/* Week indicator */}
       <View style={[s.weekBar, { backgroundColor: th.surfaceAlt }]}>
         <Pressable onPress={() => cycleWeek(-1, currentIndexRef.current)} style={s.weekArrow}>
           <Text style={[s.weekArrowText, { color: palette.teal }]}>‹</Text>
@@ -300,7 +299,7 @@ const s = StyleSheet.create({
   dotLabel:   { fontSize: 10, fontWeight: '600' },
   dot:        { width: 6, height: 6, borderRadius: 3 },
   // Card
-  card:       { borderRadius: 20, overflow: 'hidden', marginRight: CARD_GAP, maxHeight: CARD_MAX_HEIGHT },
+  card:       { borderRadius: 20, overflow: 'hidden', marginRight: CARD_GAP, height: CARD_HEIGHT },
   cardContent:{ padding: 14, paddingBottom: 18 },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', borderBottomWidth: 1, paddingBottom: 9, marginBottom: 11 },
   cardDay:    { fontSize: 18, fontWeight: '800', letterSpacing: -0.3 },
