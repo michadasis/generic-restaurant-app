@@ -224,7 +224,7 @@ export default function HomeScreen() {
         showsHorizontalScrollIndicator={false}
         snapToOffsets={DAY_KEYS.map((_, i) => i * SNAP_INTERVAL)}
         decelerationRate="fast"
-        contentContainerStyle={{ paddingLeft: PEEK, paddingRight: PEEK - CARD_GAP, flexGrow: 1, alignItems: 'center' }}
+        contentContainerStyle={{ paddingLeft: PEEK, paddingRight: PEEK - CARD_GAP }}
         onMomentumScrollEnd={onScrollEnd}
         getItemLayout={(_, i) => ({ length: SNAP_INTERVAL, offset: SNAP_INTERVAL * i, index: i })}
         style={{ flex: 1, marginTop: 8 }}
@@ -299,7 +299,7 @@ const s = StyleSheet.create({
   dotLabel:   { fontSize: 10, fontWeight: '600' },
   dot:        { width: 6, height: 6, borderRadius: 3 },
   // Card
-  card:       { borderRadius: 20, overflow: 'hidden', marginRight: CARD_GAP, height: CARD_HEIGHT },
+  card:       { borderRadius: 20, overflow: 'hidden', marginRight: CARD_GAP, marginTop: 14, height: CARD_HEIGHT },
   cardContent:{ padding: 14, paddingBottom: 18 },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', borderBottomWidth: 1, paddingBottom: 9, marginBottom: 11 },
   cardDay:    { fontSize: 18, fontWeight: '800', letterSpacing: -0.3 },
