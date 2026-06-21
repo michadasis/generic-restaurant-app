@@ -1,0 +1,86 @@
+name: Build & Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      # --- Everything below only runs if app.json's version is new ---
+
+      - name: Read app version
+        id: app_version
+        run: |
+          VERSION=$(node -p "require('./app.json').expo.version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if this version was already released
+        id: check_release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "v${{ steps.app_version.outputs.version }}" --repo "${{ github.repository }}" > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Version v${{ steps.app_version.outputs.version }} already has a release, skipping build."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup EAS
+        if: steps.check_release.outputs.exists == 'false'
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build Android APK on EAS
+        if: steps.check_release.outputs.exists == 'false'
+        run: |
+          eas build --platform android --profile production --non-interactive --wait --json > eas-build.json
+          cat eas-build.json
+          STATUS=$(node -p "JSON.parse(require('fs').readFileSync('eas-build.json','utf8'))[0].status")
+          echo "EAS build status: $STATUS"
+          if [ "$STATUS" != "finished" ]; then
+            echo "Build did not finish successfully, aborting before any release is created."
+            exit 1
+          fi
+
+      - name: Download APK
+        if: steps.check_release.outputs.exists == 'false'
+        run: |
+          URL=$(node -p "JSON.parse(require('fs').readFileSync('eas-build.json','utf8'))[0].artifacts.buildUrl")
+          curl -L "$URL" -o "restaurant-app-v${{ steps.app_version.outputs.version }}.apk"
+
+      - name: Create GitHub release
+        if: steps.check_release.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ steps.app_version.outputs.version }}
+          name: Release ${{ steps.app_version.outputs.version }}
+          generate_release_notes: true
+          files: restaurant-app-v${{ steps.app_version.outputs.version }}.apk

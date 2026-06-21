@@ -21,11 +21,13 @@ import { UpdateModal } from '@/components/UpdateModal';
 import { i18n, Lang } from '@/constants/i18n';
 import { darkTheme, lightTheme, palette, type Theme } from '@/constants/theme';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const PEEK = 20;
 const CARD_GAP = 10;
 const CARD_WIDTH = SCREEN_WIDTH - PEEK * 2;
 const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
+// Cards size themselves to their content instead of stretching to fill the screen, this cap is just a safety net for unusually long menu text
+const CARD_MAX_HEIGHT = SCREEN_HEIGHT * 0.72;
 
 type DayKey = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 const DAY_KEYS: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -154,7 +156,7 @@ export default function HomeScreen() {
         <UpdateModal updateInfo={updateInfo} onDismiss={dismiss} darkMode={dark} lang={lang} />
       )}
 
-      {/* ── Header ── */}
+      {/* Header */}
       <View style={s.header}>
         <View style={s.headerLeft}>
           <Image source={require('../../assets/images/icon.png')} style={s.logoImg} />
@@ -186,7 +188,7 @@ export default function HomeScreen() {
         </Pressable>
       </View>
 
-      {/* ── Day dots ── */}
+      {/* Day dots */}
       <View style={s.dotRow}>
         {DAY_KEYS.map((key, i) => {
           const isActive = i === currentDayIndex;
@@ -213,7 +215,7 @@ export default function HomeScreen() {
         })}
       </View>
 
-      {/* ── Cards ── */}
+      {/* Cards */}
       <FlatList
         ref={flatListRef}
         data={DAY_KEYS}
@@ -223,7 +225,7 @@ export default function HomeScreen() {
         showsHorizontalScrollIndicator={false}
         snapToOffsets={DAY_KEYS.map((_, i) => i * SNAP_INTERVAL)}
         decelerationRate="fast"
-        contentContainerStyle={{ paddingLeft: PEEK, paddingRight: PEEK - CARD_GAP }}
+        contentContainerStyle={{ paddingLeft: PEEK, paddingRight: PEEK - CARD_GAP, flexGrow: 1, alignItems: 'center' }}
         onMomentumScrollEnd={onScrollEnd}
         getItemLayout={(_, i) => ({ length: SNAP_INTERVAL, offset: SNAP_INTERVAL * i, index: i })}
         style={{ flex: 1, marginTop: 8 }}
@@ -232,7 +234,7 @@ export default function HomeScreen() {
   );
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// Subcomponents
 
 function MealSection({
   label, meal, extra, t, th,
@@ -273,7 +275,7 @@ function MealSection({
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// Styles
 
 const s = StyleSheet.create({
   root:       { flex: 1 },
@@ -298,18 +300,18 @@ const s = StyleSheet.create({
   dotLabel:   { fontSize: 10, fontWeight: '600' },
   dot:        { width: 6, height: 6, borderRadius: 3 },
   // Card
-  card:       { borderRadius: 20, overflow: 'hidden', marginRight: CARD_GAP },
-  cardContent:{ padding: 12, paddingBottom: 16 },
-  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', borderBottomWidth: 1, paddingBottom: 8, marginBottom: 10 },
-  cardDay:    { fontSize: 15, fontWeight: '800', letterSpacing: -0.3 },
-  cardDate:   { fontSize: 11, marginTop: 1 },
+  card:       { borderRadius: 20, overflow: 'hidden', marginRight: CARD_GAP, maxHeight: CARD_MAX_HEIGHT },
+  cardContent:{ padding: 14, paddingBottom: 18 },
+  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', borderBottomWidth: 1, paddingBottom: 9, marginBottom: 11 },
+  cardDay:    { fontSize: 18, fontWeight: '800', letterSpacing: -0.3 },
+  cardDate:   { fontSize: 13, marginTop: 1 },
   todayBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  todayBadgeText: { fontSize: 10, fontWeight: '800', color: '#1a1a1a' },
-  sectionDivider: { height: 1, marginVertical: 7 },
-  noData:     { textAlign: 'center', marginTop: 40, fontSize: 14 },
+  todayBadgeText: { fontSize: 11, fontWeight: '800', color: '#1a1a1a' },
+  sectionDivider: { height: 1, marginVertical: 9 },
+  noData:     { textAlign: 'center', marginTop: 40, fontSize: 15 },
   // Meal
   mealSection:   { marginBottom: 2 },
-  mealSectionLabel: { fontSize: 13, fontWeight: '800', marginBottom: 4, letterSpacing: 0.2 },
-  mealSubLabel:  { fontSize: 9, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 2 },
-  mealItem:      { fontSize: 12, lineHeight: 16, marginBottom: 1 },
+  mealSectionLabel: { fontSize: 16, fontWeight: '800', marginBottom: 5, letterSpacing: 0.2 },
+  mealSubLabel:  { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 3 },
+  mealItem:      { fontSize: 14.5, lineHeight: 19, marginBottom: 2 },
 });
