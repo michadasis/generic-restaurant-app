@@ -1,7 +1,7 @@
 <div align="center">
   <img src="assets/images/icon.png" width="100" style="border-radius: 20px" />
   <h1>UoWM Restaurant Menu App</h1>
-  <p>The weekly menu for the University of Western Macedonia's student restaurant, in your pocket instead of taped to a wall.</p>
+  <p>The weekly menu of the University of Western Macedonia's restaurant, right in your pocket.</p>
 </div>
 
 ## Why this exists
