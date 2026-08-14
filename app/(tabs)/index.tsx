@@ -37,6 +37,7 @@ const CARD_GAP = 10;
 const CARD_WIDTH = SCREEN_WIDTH - PEEK * 2;
 const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
 const CARD_TOP_SPACING = 14; // must match s.card's marginTop
+const CARD_BOTTOM_SPACING = 20; // gap between the card and the floating tab bar
 
 type DayKey = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 const DAY_KEYS: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -173,7 +174,7 @@ export default function HomeScreen() {
     return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
   };
 
-  const cardHeight = Math.max(0, cardAreaHeight - CARD_TOP_SPACING);
+  const cardHeight = Math.max(0, cardAreaHeight - CARD_TOP_SPACING - CARD_BOTTOM_SPACING);
 
   const renderCard = ({ item }: { item: VirtualDay; index: number }) => {
     const { dayKey, weekKey, weekDelta } = item;

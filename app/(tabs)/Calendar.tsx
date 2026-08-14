@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, Platform, StatusBar, Pressable } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { buildMenu, WeekMenu, DayMenu } from '@/data/menu';
 import { getDayKeyForDate } from '@/utils/getToday';
@@ -23,6 +24,9 @@ export default function CalendarScreen() {
   const today = useMemo(() => new Date(), []);
   const [viewMonth, setViewMonth]     = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDate, setSelectedDate] = useState(today);
+  // Full month grid by default; picking a date collapses it to a single-row
+  // week strip so the day's menu below doesn't need to compete for space.
+  const [expanded, setExpanded] = useState(true);
 
   useFocusEffect(useCallback(() => {
     AsyncStorage.multiGet(['theme', 'lang']).then(pairs => {
@@ -35,6 +39,9 @@ export default function CalendarScreen() {
   const th      = dark ? darkTheme : lightTheme;
   const t       = i18n[lang];
   const safePT  = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
+  // The tab bar floats over the screen (position: 'absolute' in the tabs layout),
+  // so its height isn't reserved automatically — pad the scroll content ourselves.
+  const tabBarHeight = useBottomTabBarHeight();
   const menu    = buildMenu(lang);
 
   const dayKey  = getDayKeyForDate(selectedDate);
@@ -44,12 +51,19 @@ export default function CalendarScreen() {
   const dateStr = `${String(selectedDate.getDate()).padStart(2, '0')}/${String(selectedDate.getMonth() + 1).padStart(2, '0')}/${selectedDate.getFullYear()}`;
 
   const goMonth = (delta: 1 | -1) => {
+    // Picking a month only makes sense against the full grid — re-expand.
+    setExpanded(true);
     setViewMonth(m => new Date(m.getFullYear(), m.getMonth() + delta, 1));
   };
 
   const goToday = () => {
     setViewMonth(new Date(today.getFullYear(), today.getMonth(), 1));
     setSelectedDate(today);
+  };
+
+  const pickDate = (date: Date) => {
+    setSelectedDate(date);
+    setExpanded(false);
   };
 
   // Monday-first grid: leading blanks for days before the 1st, then the
@@ -67,9 +81,18 @@ export default function CalendarScreen() {
     return cells;
   }, [viewMonth]);
 
+  // Mon..Sun of the week containing selectedDate — shown as a compact strip
+  // once the grid is collapsed, so switching days nearby doesn't require
+  // re-expanding.
+  const weekStripDates = useMemo(() => {
+    const dow    = (selectedDate.getDay() + 6) % 7; // Mon=0..Sun=6
+    const monday = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - dow);
+    return Array.from({ length: 7 }, (_, i) => new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i));
+  }, [selectedDate]);
+
   return (
     <SafeAreaView style={[s.root, { backgroundColor: th.bg, paddingTop: safePT }]}>
-      <ScrollView contentContainerStyle={s.scroll}>
+      <ScrollView contentContainerStyle={[s.scroll, { paddingBottom: tabBarHeight + 20 }]}>
 
         {/* Header */}
         <View style={s.header}>
@@ -96,41 +119,78 @@ export default function CalendarScreen() {
             </Pressable>
           </View>
 
-          {/* Weekday header */}
-          <View style={s.weekRow}>
-            {t.days.map((d, i) => (
-              <Text key={i} style={[s.weekLabel, { color: th.textMuted }]}>{d}</Text>
-            ))}
-          </View>
+          {expanded ? (
+            <>
+              {/* Weekday header */}
+              <View style={s.weekRow}>
+                {t.days.map((d, i) => (
+                  <Text key={i} style={[s.weekLabel, { color: th.textMuted }]}>{d}</Text>
+                ))}
+              </View>
 
-          {/* Day grid */}
-          <View style={s.grid}>
-            {gridCells.map((date, i) => {
-              if (!date) return <View key={i} style={s.cell} />;
-              const isSelected = isSameDay(date, selectedDate);
-              const isToday    = isSameDay(date, today);
-              return (
-                <Pressable key={i} onPress={() => setSelectedDate(date)} style={s.cell}>
-                  <View
-                    style={[
-                      s.cellInner,
-                      isSelected && { backgroundColor: palette.teal },
-                      !isSelected && isToday && { borderWidth: 1.5, borderColor: palette.amber },
-                    ]}
-                  >
-                    <Text
+              {/* Day grid */}
+              <View style={s.grid}>
+                {gridCells.map((date, i) => {
+                  if (!date) return <View key={i} style={s.cell} />;
+                  const isSelected = isSameDay(date, selectedDate);
+                  const isToday    = isSameDay(date, today);
+                  return (
+                    <Pressable key={i} onPress={() => pickDate(date)} style={s.cell}>
+                      <View
+                        style={[
+                          s.cellInner,
+                          isSelected && { backgroundColor: palette.teal },
+                          !isSelected && isToday && { borderWidth: 1.5, borderColor: palette.amber },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            s.cellText,
+                            { color: isSelected ? '#fff' : isToday ? palette.amber : th.textPrimary },
+                          ]}
+                        >
+                          {date.getDate()}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </>
+          ) : (
+            /* Collapsed week strip */
+            <View style={s.stripRow}>
+              {weekStripDates.map((date, i) => {
+                const isSelected = isSameDay(date, selectedDate);
+                const isToday    = isSameDay(date, today);
+                return (
+                  <Pressable key={i} onPress={() => setSelectedDate(date)} style={s.stripCell}>
+                    <Text style={[s.stripDayLabel, { color: th.textMuted }]}>{t.days[i]}</Text>
+                    <View
                       style={[
-                        s.cellText,
-                        { color: isSelected ? '#fff' : isToday ? palette.amber : th.textPrimary },
+                        s.cellInner,
+                        isSelected && { backgroundColor: palette.teal },
+                        !isSelected && isToday && { borderWidth: 1.5, borderColor: palette.amber },
                       ]}
                     >
-                      {date.getDate()}
-                    </Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
+                      <Text
+                        style={[
+                          s.cellText,
+                          { color: isSelected ? '#fff' : isToday ? palette.amber : th.textPrimary },
+                        ]}
+                      >
+                        {date.getDate()}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+
+          <Pressable onPress={() => setExpanded(e => !e)} style={s.toggleBtn} hitSlop={8}>
+            <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={th.textMuted} />
+          </Pressable>
         </View>
 
         {/* Selected day's menu */}
@@ -165,7 +225,7 @@ export default function CalendarScreen() {
 
 const s = StyleSheet.create({
   root:   { flex: 1 },
-  scroll: { padding: 20, paddingBottom: 60 },
+  scroll: { padding: 20 },
   // Header
   header:        { marginBottom: 16 },
   headerTitleRow:{ flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -185,6 +245,12 @@ const s = StyleSheet.create({
   cell:      { width: `${100 / 7}%`, aspectRatio: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 2 },
   cellInner: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   cellText:  { fontSize: 13, fontWeight: '600' },
+  // Collapsed week strip
+  stripRow:      { flexDirection: 'row' },
+  stripCell:     { flex: 1, alignItems: 'center', gap: 4 },
+  stripDayLabel: { fontSize: 11, fontWeight: '700', textAlign: 'center' },
+  // Expand/collapse toggle
+  toggleBtn: { alignItems: 'center', paddingTop: 8 },
   // Selected day
   dayHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', borderBottomWidth: 1, paddingBottom: 9, marginBottom: 11 },
   dayName:   { fontSize: 18, fontWeight: '800', letterSpacing: -0.3 },
