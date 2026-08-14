@@ -28,7 +28,8 @@ import { getClosureNotice } from '@/utils/getClosureNotice';
 import { useUpdateChecker } from '@/hooks/useUpdateChecker';
 import { UpdateModal } from '@/components/UpdateModal';
 import { i18n, Lang } from '@/constants/i18n';
-import { darkTheme, lightTheme, palette, type Theme } from '@/constants/theme';
+import { darkTheme, lightTheme, palette } from '@/constants/theme';
+import { MealSection } from '@/components/MealSection';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const PEEK = 20;
@@ -318,45 +319,6 @@ function DayDot({ isActive, isToday, idleColor }: { isActive: boolean; isToday: 
   return <Animated.View style={[s.dot, style]} />;
 }
 
-function MealSection({
-  label, meal, extra, t, th,
-}: {
-  label: string;
-  meal: { first: string[]; main: string[] };
-  extra?: string[];
-  t: typeof i18n['gr'];
-  th: Theme;
-}) {
-  return (
-    <View style={s.mealSection}>
-      <Text style={[s.mealSectionLabel, { color: palette.teal }]}>{label}</Text>
-
-      <Text style={[s.mealSubLabel, { color: th.textMuted }]}>{t.main}</Text>
-      {meal.main.map((item, i) => (
-        <Text key={i} style={[s.mealItem, { color: th.textPrimary }]}>{item}</Text>
-      ))}
-
-      {meal.first.length > 0 && (
-        <>
-          <Text style={[s.mealSubLabel, { color: th.textMuted, marginTop: 6 }]}>{t.firstCourse}</Text>
-          {meal.first.map((item, i) => (
-            <Text key={i} style={[s.mealItem, { color: th.textSecondary }]}>{item}</Text>
-          ))}
-        </>
-      )}
-
-      {extra && extra.length > 0 && (
-        <>
-          <Text style={[s.mealSubLabel, { color: th.textMuted, marginTop: 6 }]}>{t.extra}</Text>
-          {extra.map((item, i) => (
-            <Text key={i} style={[s.mealItem, { color: th.textSecondary }]}>{item}</Text>
-          ))}
-        </>
-      )}
-    </View>
-  );
-}
-
 // Styles
 
 const s = StyleSheet.create({
@@ -389,9 +351,4 @@ const s = StyleSheet.create({
   todayBadgeText: { fontSize: 11, fontWeight: '800', color: '#1a1a1a' },
   sectionDivider: { height: 1, marginVertical: 9 },
   noData:     { textAlign: 'center', marginTop: 40, fontSize: 15 },
-  // Meal
-  mealSection:   { marginBottom: 2 },
-  mealSectionLabel: { fontSize: 16, fontWeight: '800', marginBottom: 5, letterSpacing: 0.2 },
-  mealSubLabel:  { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 3 },
-  mealItem:      { fontSize: 14.5, lineHeight: 19, marginBottom: 2 },
 });

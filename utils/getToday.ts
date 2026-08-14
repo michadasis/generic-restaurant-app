@@ -1,10 +1,15 @@
 type DayKey = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
 
+const DAYS_BY_JS_INDEX: DayKey[] = [
+  "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
+];
+
+export function getDayKeyForDate(date: Date): DayKey {
+  return DAYS_BY_JS_INDEX[date.getDay()];
+}
+
 export function getTodayKey(): DayKey {
-  const days: DayKey[] = [
-    "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
-  ];
-  return days[new Date().getDay()];
+  return getDayKeyForDate(new Date());
 }
 
 export function getTodayLabel(lang: 'gr' | 'en' = 'gr'): string {

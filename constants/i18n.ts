@@ -27,11 +27,17 @@ export const i18n = {
     aboutDesc3: 'Προγραμματίστηκε απο τον Μιχαδάση Ιωάννη, λογότυπο σχεδιασμένο απο την Μάκη Κατερίνα.',
     aboutGithub: 'GitHub',
     // Tab labels
-    tabHome:  'Αρχική',
-    tabAbout: 'Σχετικά',
+    tabHome:     'Αρχική',
+    tabCalendar: 'Ημερολόγιο',
+    tabAbout:    'Σχετικά',
     // Seasonal closure notice
     closingNotice:  'Η λέσχη ενδέχεται να είναι κλειστή αυτή την περίοδο λόγω καλοκαιρινού διαλείμματος.',
     reopeningNotice:'Η λέσχη ενδέχεται να μην έχει ανοίξει ακόμα για τη νέα ακαδημαϊκή χρονιά.',
+    // Calendar screen
+    calendarSubtitle: 'Δες το μενού οποιασδήποτε ημέρας',
+    today:    'Σήμερα',
+    months: ['Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος',
+             'Ιούλιος', 'Αύγουστος', 'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος'],
   },
   en: {
     appTitle:    'UoWM Restaurant',
@@ -59,10 +65,16 @@ export const i18n = {
     aboutDesc3: 'Programmed by Michadasis Ioannis, logo designed by Maki Katerina.',
     aboutGithub: 'GitHub',
     // Tab labels
-    tabHome:  'Home',
-    tabAbout: 'About',
+    tabHome:     'Home',
+    tabCalendar: 'Calendar',
+    tabAbout:    'About',
     // Seasonal closure notice
     closingNotice:  'The restaurant might be closed at this time due to the summer break.',
     reopeningNotice:'The restaurant may not have reopened yet for the new academic year.',
+    // Calendar screen
+    calendarSubtitle: "View any day's menu",
+    today:    'Today',
+    months: ['January', 'February', 'March', 'April', 'May', 'June',
+             'July', 'August', 'September', 'October', 'November', 'December'],
   },
 };
