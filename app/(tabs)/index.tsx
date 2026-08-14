@@ -12,10 +12,18 @@ import {
   Text,
   View,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  interpolateColor,
+  Easing,
+} from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { buildMenu, CYCLE_WEEKS, WeekMenu, DayMenu } from '../../data/menu';
 import { getTodayKey } from '@/utils/getToday';
 import { getCurrentWeekKey } from '@/utils/getWeek';
+import { getClosureNotice } from '@/utils/getClosureNotice';
 import { useUpdateChecker } from '@/hooks/useUpdateChecker';
 import { UpdateModal } from '@/components/UpdateModal';
 import { i18n, Lang } from '@/constants/i18n';
@@ -40,9 +48,14 @@ export default function HomeScreen() {
   const todayIndex = DAY_KEYS.indexOf(todayKey);
 
   const [selectedWeek, setSelectedWeek] = useState<string>(getCurrentWeekKey());
+  // Number of real calendar weeks the selected week is from the current one (can go negative).
+  const [weekOffset, setWeekOffset]     = useState(0);
   const [currentDayIndex, setCurrentDayIndex] = useState(todayIndex);
   const currentIndexRef = useRef(todayIndex);
   const flatListRef     = useRef<FlatList>(null);
+  // Only true while the FlatList is being scrolled by an actual touch drag —
+  // never set for programmatic scrollToIndex calls (dot taps, week-cycle landing).
+  const didUserDrag      = useRef(false);
 
   const safePT = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0;
 
@@ -67,6 +80,7 @@ export default function HomeScreen() {
   const th = dark ? darkTheme : lightTheme;
   const t  = i18n[lang];
   const menu = buildMenu(lang);
+  const closureNotice = getClosureNotice();
 
   const cycleWeek = (dir: 1 | -1, landIndex: number) => {
     setSelectedWeek(prev => {
@@ -74,6 +88,7 @@ export default function HomeScreen() {
       const next = ((cur - 1 + dir + CYCLE_WEEKS) % CYCLE_WEEKS) + 1;
       return `week${next}`;
     });
+    setWeekOffset(o => o + dir);
     setTimeout(() => {
       flatListRef.current?.scrollToIndex({ index: landIndex, animated: false });
       currentIndexRef.current = landIndex;
@@ -83,16 +98,27 @@ export default function HomeScreen() {
 
   const lastOffsetX = useRef(0);
 
+  const goToDay = (i: number) => {
+    if (i === currentIndexRef.current) return;
+    flatListRef.current?.scrollToIndex({ index: i, animated: true });
+    currentIndexRef.current = i;
+    setCurrentDayIndex(i);
+  };
+
   const onScrollEnd = (e: any) => {
     const offsetX = e.nativeEvent.contentOffset.x;
     const idx     = Math.round(offsetX / SNAP_INTERVAL);
     const clamped = Math.max(0, Math.min(idx, DAY_KEYS.length - 1));
     const swipedRight = offsetX >= lastOffsetX.current;
     const swipedLeft  = offsetX <= lastOffsetX.current;
+    const wasUserDrag = didUserDrag.current;
+    didUserDrag.current = false;
 
-    if (clamped === DAY_KEYS.length - 1 && swipedRight && currentIndexRef.current === DAY_KEYS.length - 1) {
+    // Only a real touch-drag past the last/first day should cycle the week —
+    // a dot tap that merely lands on Sunday/Monday must not trigger this.
+    if (wasUserDrag && clamped === DAY_KEYS.length - 1 && swipedRight && currentIndexRef.current === DAY_KEYS.length - 1) {
       cycleWeek(1, 0);
-    } else if (clamped === 0 && swipedLeft && currentIndexRef.current === 0) {
+    } else if (wasUserDrag && clamped === 0 && swipedLeft && currentIndexRef.current === 0) {
       cycleWeek(-1, DAY_KEYS.length - 1);
     } else {
       currentIndexRef.current = clamped;
@@ -106,13 +132,13 @@ export default function HomeScreen() {
     const now   = new Date();
     const diff  = DAY_KEYS.indexOf(dayKey) - DAY_KEYS.indexOf(todayKey);
     const d     = new Date(now);
-    d.setDate(now.getDate() + diff);
+    d.setDate(now.getDate() + diff + weekOffset * 7);
     return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
   };
 
   const renderCard = ({ item: dayKey, index }: { item: DayKey; index: number }) => {
     const dayMenu = (menu[selectedWeek] as WeekMenu)?.[dayKey] as DayMenu;
-    const isToday = dayKey === todayKey && selectedWeek === getCurrentWeekKey();
+    const isToday = dayKey === todayKey && weekOffset === 0;
     const dateStr = getDayDate(dayKey);
     const fullDay = t.fullDays[index];
 
@@ -174,6 +200,14 @@ export default function HomeScreen() {
         </View>
       </View>
 
+      {closureNotice && (
+        <View style={[s.noticeBar, { backgroundColor: palette.amber }]}>
+          <Text style={s.noticeText}>
+            {closureNotice === 'closing' ? t.closingNotice : t.reopeningNotice}
+          </Text>
+        </View>
+      )}
+
       {/* Week indicator */}
       <View style={[s.weekBar, { backgroundColor: th.surfaceAlt }]}>
         <Pressable onPress={() => cycleWeek(-1, currentIndexRef.current)} style={s.weekArrow}>
@@ -191,24 +225,17 @@ export default function HomeScreen() {
       <View style={s.dotRow}>
         {DAY_KEYS.map((key, i) => {
           const isActive = i === currentDayIndex;
+          const isToday  = key === todayKey && weekOffset === 0;
           return (
             <Pressable
               key={key}
-              onPress={() => {
-                flatListRef.current?.scrollToIndex({ index: i, animated: true });
-                currentIndexRef.current = i;
-                setCurrentDayIndex(i);
-              }}
+              onPress={() => goToDay(i)}
               style={s.dotWrap}
             >
-              <Text style={[s.dotLabel, { color: isActive ? palette.teal : key === todayKey && selectedWeek === getCurrentWeekKey() ? palette.amber : th.textMuted }]}>
+              <Text style={[s.dotLabel, { color: isActive ? palette.teal : isToday ? palette.amber : th.textMuted }]}>
                 {t.days[i]}
               </Text>
-              <View style={[
-                s.dot,
-                { backgroundColor: key === todayKey && selectedWeek === getCurrentWeekKey() ? palette.amber : th.border },
-                isActive && { backgroundColor: palette.teal, transform: [{ scale: 1.3 }] },
-              ]} />
+              <DayDot isActive={isActive} isToday={isToday} idleColor={th.border} />
             </Pressable>
           );
         })}
@@ -225,6 +252,7 @@ export default function HomeScreen() {
         snapToOffsets={DAY_KEYS.map((_, i) => i * SNAP_INTERVAL)}
         decelerationRate="fast"
         contentContainerStyle={{ paddingLeft: PEEK, paddingRight: PEEK - CARD_GAP }}
+        onScrollBeginDrag={() => { didUserDrag.current = true; }}
         onMomentumScrollEnd={onScrollEnd}
         getItemLayout={(_, i) => ({ length: SNAP_INTERVAL, offset: SNAP_INTERVAL * i, index: i })}
         style={{ flex: 1, marginTop: 8 }}
@@ -234,6 +262,23 @@ export default function HomeScreen() {
 }
 
 // Subcomponents
+
+function DayDot({ isActive, isToday, idleColor }: { isActive: boolean; isToday: boolean; idleColor: string }) {
+  const progress = useSharedValue(isActive ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(isActive ? 1 : 0, { duration: 220, easing: Easing.out(Easing.cubic) });
+  }, [isActive, progress]);
+
+  const restColor = isToday ? palette.amber : idleColor;
+
+  const style = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(progress.value, [0, 1], [restColor, palette.teal]),
+    transform: [{ scale: 1 + progress.value * 0.3 }],
+  }));
+
+  return <Animated.View style={[s.dot, style]} />;
+}
 
 function MealSection({
   label, meal, extra, t, th,
@@ -288,6 +333,9 @@ const s = StyleSheet.create({
   iconBtn:    { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   iconBtnText:{ fontSize: 16 },
   iconBtnLabel:{ fontSize: 13, fontWeight: '700' },
+  // Seasonal closure notice
+  noticeBar:  { marginHorizontal: 16, marginBottom: 8, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12 },
+  noticeText: { fontSize: 12.5, fontWeight: '700', color: '#1a1a1a', lineHeight: 17 },
   // Week bar
   weekBar:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 16, borderRadius: 12, paddingVertical: 6, paddingHorizontal: 4, marginBottom: 8 },
   weekArrow:  { padding: 8 },

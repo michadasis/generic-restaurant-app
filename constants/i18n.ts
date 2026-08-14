@@ -29,6 +29,9 @@ export const i18n = {
     // Tab labels
     tabHome:  'Αρχική',
     tabAbout: 'Σχετικά',
+    // Seasonal closure notice
+    closingNotice:  'Η λέσχη ενδέχεται να είναι κλειστή αυτή την περίοδο λόγω καλοκαιρινού διαλείμματος.',
+    reopeningNotice:'Η λέσχη ενδέχεται να μην έχει ανοίξει ακόμα για τη νέα ακαδημαϊκή χρονιά.',
   },
   en: {
     appTitle:    'UoWM Restaurant',
@@ -58,5 +61,8 @@ export const i18n = {
     // Tab labels
     tabHome:  'Home',
     tabAbout: 'About',
+    // Seasonal closure notice
+    closingNotice:  'The restaurant may be closed this week for the summer break.',
+    reopeningNotice:'The restaurant may not have reopened yet for the new academic year.',
   },
 };
