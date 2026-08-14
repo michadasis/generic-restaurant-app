@@ -62,7 +62,7 @@ export const i18n = {
     tabHome:  'Home',
     tabAbout: 'About',
     // Seasonal closure notice
-    closingNotice:  'The restaurant may be closed this week for the summer break.',
+    closingNotice:  'The restaurant might be closed at this time due to the summer break.',
     reopeningNotice:'The restaurant may not have reopened yet for the new academic year.',
   },
 };

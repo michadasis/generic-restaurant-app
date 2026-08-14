@@ -20,6 +20,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { buildMenu, CYCLE_WEEKS, WeekMenu, DayMenu } from '../../data/menu';
 import { getTodayKey } from '@/utils/getToday';
 import { getCurrentWeekKey } from '@/utils/getWeek';
@@ -29,12 +30,12 @@ import { UpdateModal } from '@/components/UpdateModal';
 import { i18n, Lang } from '@/constants/i18n';
 import { darkTheme, lightTheme, palette, type Theme } from '@/constants/theme';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const PEEK = 20;
 const CARD_GAP = 10;
 const CARD_WIDTH = SCREEN_WIDTH - PEEK * 2;
 const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
-const CARD_HEIGHT = SCREEN_HEIGHT * 0.6;
+const CARD_TOP_SPACING = 14; // must match s.card's marginTop
 
 type DayKey = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 const DAY_KEYS: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -47,6 +48,10 @@ export default function HomeScreen() {
   const todayKey   = getTodayKey();
   const todayIndex = DAY_KEYS.indexOf(todayKey);
 
+  // Measured height of the area below the dots row — cards size themselves to
+  // fit exactly within it, so they never get clipped by the tab bar regardless
+  // of how much space the header/notice bar/week bar take up.
+  const [cardAreaHeight, setCardAreaHeight]   = useState(0);
   const [selectedWeek, setSelectedWeek] = useState<string>(getCurrentWeekKey());
   // Number of real calendar weeks the selected week is from the current one (can go negative).
   const [weekOffset, setWeekOffset]     = useState(0);
@@ -56,8 +61,15 @@ export default function HomeScreen() {
   // Only true while the FlatList is being scrolled by an actual touch drag —
   // never set for programmatic scrollToIndex calls (dot taps, week-cycle landing).
   const didUserDrag      = useRef(false);
+  // Fades the card area out/in around the week swap so the data change
+  // (and the instant scrollToIndex snap) isn't a visible jump-cut.
+  const contentOpacity   = useSharedValue(1);
+  const contentAnimatedStyle = useAnimatedStyle(() => ({ opacity: contentOpacity.value }));
 
   const safePT = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0;
+  // The tab bar floats over the screen (position: 'absolute' in the tabs layout),
+  // so its height isn't reserved automatically — pad the bottom ourselves.
+  const tabBarHeight = useBottomTabBarHeight();
 
   useEffect(() => {
     AsyncStorage.multiGet(['lang', 'theme']).then(pairs => {
@@ -83,17 +95,23 @@ export default function HomeScreen() {
   const closureNotice = getClosureNotice();
 
   const cycleWeek = (dir: 1 | -1, landIndex: number) => {
-    setSelectedWeek(prev => {
-      const cur  = parseInt(prev.replace('week', ''), 10);
-      const next = ((cur - 1 + dir + CYCLE_WEEKS) % CYCLE_WEEKS) + 1;
-      return `week${next}`;
-    });
-    setWeekOffset(o => o + dir);
+    contentOpacity.value = withTiming(0, { duration: 150, easing: Easing.out(Easing.cubic) });
+
     setTimeout(() => {
-      flatListRef.current?.scrollToIndex({ index: landIndex, animated: false });
-      currentIndexRef.current = landIndex;
-      setCurrentDayIndex(landIndex);
-    }, 50);
+      setSelectedWeek(prev => {
+        const cur  = parseInt(prev.replace('week', ''), 10);
+        const next = ((cur - 1 + dir + CYCLE_WEEKS) % CYCLE_WEEKS) + 1;
+        return `week${next}`;
+      });
+      setWeekOffset(o => o + dir);
+
+      setTimeout(() => {
+        flatListRef.current?.scrollToIndex({ index: landIndex, animated: false });
+        currentIndexRef.current = landIndex;
+        setCurrentDayIndex(landIndex);
+        contentOpacity.value = withTiming(1, { duration: 220, easing: Easing.out(Easing.cubic) });
+      }, 50);
+    }, 150);
   };
 
   const lastOffsetX = useRef(0);
@@ -136,6 +154,8 @@ export default function HomeScreen() {
     return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
   };
 
+  const cardHeight = Math.max(0, cardAreaHeight - CARD_TOP_SPACING);
+
   const renderCard = ({ item: dayKey, index }: { item: DayKey; index: number }) => {
     const dayMenu = (menu[selectedWeek] as WeekMenu)?.[dayKey] as DayMenu;
     const isToday = dayKey === todayKey && weekOffset === 0;
@@ -144,7 +164,7 @@ export default function HomeScreen() {
 
     return (
       <ScrollView
-        style={[s.card, { width: CARD_WIDTH, backgroundColor: th.surface }]}
+        style={[s.card, { width: CARD_WIDTH, height: cardHeight, backgroundColor: th.surface }]}
         contentContainerStyle={s.cardContent}
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled
@@ -176,7 +196,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={[s.root, { backgroundColor: th.bg, paddingTop: safePT }]}>
+    <SafeAreaView style={[s.root, { backgroundColor: th.bg, paddingTop: safePT, paddingBottom: tabBarHeight }]}>
       {updateInfo && (
         <UpdateModal updateInfo={updateInfo} onDismiss={dismiss} darkMode={dark} lang={lang} />
       )}
@@ -208,19 +228,6 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Week indicator */}
-      <View style={[s.weekBar, { backgroundColor: th.surfaceAlt }]}>
-        <Pressable onPress={() => cycleWeek(-1, currentIndexRef.current)} style={s.weekArrow}>
-          <Text style={[s.weekArrowText, { color: palette.teal }]}>‹</Text>
-        </Pressable>
-        <Text style={[s.weekLabel, { color: th.textPrimary }]}>
-          {t.week(parseInt(selectedWeek.replace('week', ''), 10))}
-        </Text>
-        <Pressable onPress={() => cycleWeek(1, currentIndexRef.current)} style={s.weekArrow}>
-          <Text style={[s.weekArrowText, { color: palette.teal }]}>›</Text>
-        </Pressable>
-      </View>
-
       {/* Day dots */}
       <View style={s.dotRow}>
         {DAY_KEYS.map((key, i) => {
@@ -242,21 +249,26 @@ export default function HomeScreen() {
       </View>
 
       {/* Cards */}
-      <FlatList
-        ref={flatListRef}
-        data={DAY_KEYS}
-        renderItem={renderCard}
-        keyExtractor={k => k}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        snapToOffsets={DAY_KEYS.map((_, i) => i * SNAP_INTERVAL)}
-        decelerationRate="fast"
-        contentContainerStyle={{ paddingLeft: PEEK, paddingRight: PEEK - CARD_GAP }}
-        onScrollBeginDrag={() => { didUserDrag.current = true; }}
-        onMomentumScrollEnd={onScrollEnd}
-        getItemLayout={(_, i) => ({ length: SNAP_INTERVAL, offset: SNAP_INTERVAL * i, index: i })}
-        style={{ flex: 1, marginTop: 8 }}
-      />
+      <Animated.View
+        style={[{ flex: 1 }, contentAnimatedStyle]}
+        onLayout={e => setCardAreaHeight(e.nativeEvent.layout.height)}
+      >
+        <FlatList
+          ref={flatListRef}
+          data={DAY_KEYS}
+          renderItem={renderCard}
+          keyExtractor={k => k}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          snapToOffsets={DAY_KEYS.map((_, i) => i * SNAP_INTERVAL)}
+          decelerationRate="fast"
+          contentContainerStyle={{ paddingLeft: PEEK, paddingRight: PEEK - CARD_GAP }}
+          onScrollBeginDrag={() => { didUserDrag.current = true; }}
+          onMomentumScrollEnd={onScrollEnd}
+          getItemLayout={(_, i) => ({ length: SNAP_INTERVAL, offset: SNAP_INTERVAL * i, index: i })}
+          style={{ flex: 1 }}
+        />
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -336,18 +348,13 @@ const s = StyleSheet.create({
   // Seasonal closure notice
   noticeBar:  { marginHorizontal: 16, marginBottom: 8, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12 },
   noticeText: { fontSize: 12.5, fontWeight: '700', color: '#1a1a1a', lineHeight: 17 },
-  // Week bar
-  weekBar:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 16, borderRadius: 12, paddingVertical: 6, paddingHorizontal: 4, marginBottom: 8 },
-  weekArrow:  { padding: 8 },
-  weekArrowText: { fontSize: 22, fontWeight: '300', lineHeight: 24 },
-  weekLabel:  { fontSize: 14, fontWeight: '700', letterSpacing: 0.2 },
   // Dot row
-  dotRow:     { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 4 },
+  dotRow:     { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, marginTop: 4, marginBottom: 4 },
   dotWrap:    { alignItems: 'center', gap: 4 },
   dotLabel:   { fontSize: 10, fontWeight: '600' },
   dot:        { width: 6, height: 6, borderRadius: 3 },
   // Card
-  card:       { borderRadius: 20, overflow: 'hidden', marginRight: CARD_GAP, marginTop: 14, height: CARD_HEIGHT },
+  card:       { borderRadius: 20, overflow: 'hidden', marginRight: CARD_GAP, marginTop: CARD_TOP_SPACING },
   cardContent:{ padding: 14, paddingBottom: 18 },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', borderBottomWidth: 1, paddingBottom: 9, marginBottom: 11 },
   cardDay:    { fontSize: 18, fontWeight: '800', letterSpacing: -0.3 },
