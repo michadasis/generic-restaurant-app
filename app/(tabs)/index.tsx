@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -40,6 +40,19 @@ const CARD_TOP_SPACING = 14; // must match s.card's marginTop
 type DayKey = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 const DAY_KEYS: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
+// The FlatList is padded with one card from the adjacent week on each side
+// (the "buffer"). Their content is computed to be pixel-identical to what the
+// real card at the landing index will show right after the week swap, so
+// snapping to it (animated: false) the instant the swipe settles is invisible —
+// swiping across a week boundary feels like scrolling to just another day.
+type VirtualDay = { key: string; dayKey: DayKey; weekKey: string; weekDelta: number };
+
+const shiftWeekKey = (weekKey: string, dir: 1 | -1) => {
+  const cur  = parseInt(weekKey.replace('week', ''), 10);
+  const next = ((cur - 1 + dir + CYCLE_WEEKS) % CYCLE_WEEKS) + 1;
+  return `week${next}`;
+};
+
 export default function HomeScreen() {
   const [lang, setLang]         = useState<Lang>('gr');
   const [dark, setDark]         = useState(true);
@@ -55,16 +68,17 @@ export default function HomeScreen() {
   const [selectedWeek, setSelectedWeek] = useState<string>(getCurrentWeekKey());
   // Number of real calendar weeks the selected week is from the current one (can go negative).
   const [weekOffset, setWeekOffset]     = useState(0);
-  const [currentDayIndex, setCurrentDayIndex] = useState(todayIndex);
-  const currentIndexRef = useRef(todayIndex);
+  // Index into virtualDays (0 = prev-week buffer, 1..7 = Mon..Sun, 8 = next-week buffer).
+  const [currentDayIndex, setCurrentDayIndex] = useState(todayIndex + 1);
+  const currentIndexRef = useRef(todayIndex + 1);
   const flatListRef     = useRef<FlatList>(null);
   // Only true while the FlatList is being scrolled by an actual touch drag —
   // never set for programmatic scrollToIndex calls (dot taps, week-cycle landing).
   const didUserDrag      = useRef(false);
-  // Fades the card area out/in around the week swap so the data change
-  // (and the instant scrollToIndex snap) isn't a visible jump-cut.
-  const contentOpacity   = useSharedValue(1);
-  const contentAnimatedStyle = useAnimatedStyle(() => ({ opacity: contentOpacity.value }));
+  // Set right before a week swap; the effect below fires once virtualDays has
+  // re-rendered for the new selectedWeek and silently re-centers the scroll
+  // position from the buffer card onto its real-card equivalent.
+  const pendingRecenter  = useRef<number | null>(null);
 
   const safePT = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0;
   // The tab bar floats over the screen (position: 'absolute' in the tabs layout),
@@ -84,83 +98,88 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      flatListRef.current?.scrollToIndex({ index: todayIndex, animated: false });
+      flatListRef.current?.scrollToIndex({ index: todayIndex + 1, animated: false });
     }, 150);
     return () => clearTimeout(timer);
   }, []);
+
+  const virtualDays: VirtualDay[] = useMemo(() => {
+    const prevWeek = shiftWeekKey(selectedWeek, -1);
+    const nextWeek = shiftWeekKey(selectedWeek, 1);
+    return [
+      { key: 'buffer-prev', dayKey: 'sunday', weekKey: prevWeek, weekDelta: -1 },
+      ...DAY_KEYS.map(dayKey => ({ key: dayKey, dayKey, weekKey: selectedWeek, weekDelta: 0 })),
+      { key: 'buffer-next', dayKey: 'monday', weekKey: nextWeek, weekDelta: 1 },
+    ];
+  }, [selectedWeek]);
+  const lastVirtualIndex = virtualDays.length - 1;
+
+  // Fires after a week swap re-renders virtualDays; lands the scroll on the
+  // real card that already matches what the buffer card was showing.
+  useEffect(() => {
+    if (pendingRecenter.current !== null) {
+      const index = pendingRecenter.current;
+      pendingRecenter.current = null;
+      flatListRef.current?.scrollToIndex({ index, animated: false });
+    }
+  }, [selectedWeek]);
 
   const th = dark ? darkTheme : lightTheme;
   const t  = i18n[lang];
   const menu = buildMenu(lang);
   const closureNotice = getClosureNotice();
 
-  const cycleWeek = (dir: 1 | -1, landIndex: number) => {
-    contentOpacity.value = withTiming(0, { duration: 150, easing: Easing.out(Easing.cubic) });
-
-    setTimeout(() => {
-      setSelectedWeek(prev => {
-        const cur  = parseInt(prev.replace('week', ''), 10);
-        const next = ((cur - 1 + dir + CYCLE_WEEKS) % CYCLE_WEEKS) + 1;
-        return `week${next}`;
-      });
-      setWeekOffset(o => o + dir);
-
-      setTimeout(() => {
-        flatListRef.current?.scrollToIndex({ index: landIndex, animated: false });
-        currentIndexRef.current = landIndex;
-        setCurrentDayIndex(landIndex);
-        contentOpacity.value = withTiming(1, { duration: 220, easing: Easing.out(Easing.cubic) });
-      }, 50);
-    }, 150);
-  };
-
-  const lastOffsetX = useRef(0);
-
-  const goToDay = (i: number) => {
-    if (i === currentIndexRef.current) return;
-    flatListRef.current?.scrollToIndex({ index: i, animated: true });
-    currentIndexRef.current = i;
-    setCurrentDayIndex(i);
+  const goToDay = (localIndex: number) => {
+    const target = localIndex + 1;
+    if (target === currentIndexRef.current) return;
+    flatListRef.current?.scrollToIndex({ index: target, animated: true });
+    currentIndexRef.current = target;
+    setCurrentDayIndex(target);
   };
 
   const onScrollEnd = (e: any) => {
     const offsetX = e.nativeEvent.contentOffset.x;
     const idx     = Math.round(offsetX / SNAP_INTERVAL);
-    const clamped = Math.max(0, Math.min(idx, DAY_KEYS.length - 1));
-    const swipedRight = offsetX >= lastOffsetX.current;
-    const swipedLeft  = offsetX <= lastOffsetX.current;
+    const clamped = Math.max(0, Math.min(idx, lastVirtualIndex));
     const wasUserDrag = didUserDrag.current;
     didUserDrag.current = false;
 
-    // Only a real touch-drag past the last/first day should cycle the week —
-    // a dot tap that merely lands on Sunday/Monday must not trigger this.
-    if (wasUserDrag && clamped === DAY_KEYS.length - 1 && swipedRight && currentIndexRef.current === DAY_KEYS.length - 1) {
-      cycleWeek(1, 0);
-    } else if (wasUserDrag && clamped === 0 && swipedLeft && currentIndexRef.current === 0) {
-      cycleWeek(-1, DAY_KEYS.length - 1);
+    if (wasUserDrag && clamped === lastVirtualIndex) {
+      // Landed on the next-week-Monday buffer — commit the week forward.
+      setSelectedWeek(prev => shiftWeekKey(prev, 1));
+      setWeekOffset(o => o + 1);
+      pendingRecenter.current = 1;
+      currentIndexRef.current = 1;
+      setCurrentDayIndex(1);
+    } else if (wasUserDrag && clamped === 0) {
+      // Landed on the prev-week-Sunday buffer — commit the week back.
+      setSelectedWeek(prev => shiftWeekKey(prev, -1));
+      setWeekOffset(o => o - 1);
+      pendingRecenter.current = lastVirtualIndex - 1;
+      currentIndexRef.current = lastVirtualIndex - 1;
+      setCurrentDayIndex(lastVirtualIndex - 1);
     } else {
       currentIndexRef.current = clamped;
       setCurrentDayIndex(clamped);
     }
-
-    lastOffsetX.current = offsetX;
   };
 
-  const getDayDate = (dayKey: DayKey) => {
+  const getDayDate = (dayKey: DayKey, weekDelta: number) => {
     const now   = new Date();
     const diff  = DAY_KEYS.indexOf(dayKey) - DAY_KEYS.indexOf(todayKey);
     const d     = new Date(now);
-    d.setDate(now.getDate() + diff + weekOffset * 7);
+    d.setDate(now.getDate() + diff + (weekOffset + weekDelta) * 7);
     return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
   };
 
   const cardHeight = Math.max(0, cardAreaHeight - CARD_TOP_SPACING);
 
-  const renderCard = ({ item: dayKey, index }: { item: DayKey; index: number }) => {
-    const dayMenu = (menu[selectedWeek] as WeekMenu)?.[dayKey] as DayMenu;
-    const isToday = dayKey === todayKey && weekOffset === 0;
-    const dateStr = getDayDate(dayKey);
-    const fullDay = t.fullDays[index];
+  const renderCard = ({ item }: { item: VirtualDay; index: number }) => {
+    const { dayKey, weekKey, weekDelta } = item;
+    const dayMenu = (menu[weekKey] as WeekMenu)?.[dayKey] as DayMenu;
+    const isToday = dayKey === todayKey && weekOffset + weekDelta === 0;
+    const dateStr = getDayDate(dayKey, weekDelta);
+    const fullDay = t.fullDays[DAY_KEYS.indexOf(dayKey)];
 
     return (
       <ScrollView
@@ -231,7 +250,14 @@ export default function HomeScreen() {
       {/* Day dots */}
       <View style={s.dotRow}>
         {DAY_KEYS.map((key, i) => {
-          const isActive = i === currentDayIndex;
+          // currentDayIndex briefly visits the buffer slots (0, lastVirtualIndex)
+          // for a single frame right as a week swap commits — map those back to
+          // the real day they represent (Sunday / Monday) so the dots stay correct.
+          const normalized =
+            currentDayIndex === 0 ? DAY_KEYS.length - 1 :
+            currentDayIndex === lastVirtualIndex ? 0 :
+            currentDayIndex - 1;
+          const isActive = i === normalized;
           const isToday  = key === todayKey && weekOffset === 0;
           return (
             <Pressable
@@ -249,18 +275,18 @@ export default function HomeScreen() {
       </View>
 
       {/* Cards */}
-      <Animated.View
-        style={[{ flex: 1 }, contentAnimatedStyle]}
+      <View
+        style={{ flex: 1 }}
         onLayout={e => setCardAreaHeight(e.nativeEvent.layout.height)}
       >
         <FlatList
           ref={flatListRef}
-          data={DAY_KEYS}
+          data={virtualDays}
           renderItem={renderCard}
-          keyExtractor={k => k}
+          keyExtractor={item => item.key}
           horizontal
           showsHorizontalScrollIndicator={false}
-          snapToOffsets={DAY_KEYS.map((_, i) => i * SNAP_INTERVAL)}
+          snapToOffsets={virtualDays.map((_, i) => i * SNAP_INTERVAL)}
           decelerationRate="fast"
           contentContainerStyle={{ paddingLeft: PEEK, paddingRight: PEEK - CARD_GAP }}
           onScrollBeginDrag={() => { didUserDrag.current = true; }}
@@ -268,7 +294,7 @@ export default function HomeScreen() {
           getItemLayout={(_, i) => ({ length: SNAP_INTERVAL, offset: SNAP_INTERVAL * i, index: i })}
           style={{ flex: 1 }}
         />
-      </Animated.View>
+      </View>
     </SafeAreaView>
   );
 }
