@@ -10,7 +10,7 @@ The restaurant menu used to live on a printed sheet near the entrance, or buried
 
 ## What it does
 
-The menu runs on a two week cycle, and the app figures out on its own which week you're currently in, so you never have to think about it. It opens straight to today's menu. From there you can swipe left or right to move through the rest of the week, and if you keep swiping past the last day it just rolls into the next week for you.
+The menu cycle is variable from the university, however the app figures out on its own which week you're currently in, so you never have to think about it. It opens straight to today's menu. From there you can swipe left or right to move through the rest of the week, and if you keep swiping past the last day it just rolls into the next week for you.
 
 ## Screenshots
 
@@ -35,6 +35,7 @@ It's Android only for now. There's no iOS build.
 * Greek and English, switchable the same way
 * Checks GitHub on launch and lets you know if a newer version is out
 * Colors pulled from the actual UoWM logo, teal and amber
+* Gives you a heads-up if the restaurant's probably closed, around the summer break and right when a new academic year is about to start
 
 ## How the code is laid out
 
@@ -61,8 +62,9 @@ hooks/
   useUpdateChecker.ts  checks the GitHub releases API for a newer version
 
 utils/
-  getToday.ts        works out today's day and its label
-  getWeek.ts          works out which week of the cycle we're in
+  getToday.ts          works out today's day and its label
+  getWeek.ts           works out which week of the cycle we're in
+  getClosureNotice.ts  works out if the restaurant's likely closed for the summer break or not open yet for the new one
 ```
 
 ## Running it yourself
@@ -100,6 +102,6 @@ The actual menu text lives in `data/restaurantMenu.js`. Each week has a Greek an
 
 ## Credits
 
-Built by [Ioannis Michadasis](github.com/michadasis).
+Built by [Ioannis Michadasis](https://github.com/michadasis/).
 
 Logo by Katerina Maki.
