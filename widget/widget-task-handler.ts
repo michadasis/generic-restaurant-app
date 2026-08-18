@@ -38,9 +38,12 @@ export const widgetTaskHandler: WidgetTaskHandler = async ({
   if (!dayMenu) return;
 
   if (widgetInfo.widgetName === 'TodayMenuCompact') {
-    const isDinner = new Date().getHours() >= 16;
-    const meal = isDinner ? dayMenu.dinner : dayMenu.lunch;
-    const mealLabel = isDinner ? t.dinner : t.lunch;
+    // Lunch window is 09:00-15:30; dinner covers the rest, wrapping past midnight.
+    const now = new Date();
+    const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
+    const isLunch = minutesSinceMidnight >= 9 * 60 && minutesSinceMidnight < 15 * 60 + 30;
+    const meal = isLunch ? dayMenu.lunch : dayMenu.dinner;
+    const mealLabel = isLunch ? t.lunch : t.dinner;
 
     renderWidget({
       light: React.createElement(TodayMenuCompactWidget, {
