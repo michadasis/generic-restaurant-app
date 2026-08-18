@@ -44,7 +44,39 @@
           }
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "TodayMenuFull",
+              "label": "Today's Menu",
+              "description": "Shows today's lunch and dinner menu.",
+              "minWidth": "250dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "maxResizeWidth": "320dp",
+              "maxResizeHeight": "250dp",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "TodayMenuCompact",
+              "label": "Today's Menu (Compact)",
+              "description": "Shows the next upcoming meal.",
+              "minWidth": "110dp",
+              "minHeight": "40dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 1,
+              "resizeMode": "horizontal",
+              "maxResizeWidth": "180dp",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
