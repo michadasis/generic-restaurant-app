@@ -70,8 +70,9 @@
               "minHeight": "40dp",
               "targetCellWidth": 2,
               "targetCellHeight": 1,
-              "resizeMode": "horizontal",
-              "maxResizeWidth": "180dp",
+              "resizeMode": "horizontal|vertical",
+              "maxResizeWidth": "380dp",
+              "maxResizeHeight": "110dp",
               "updatePeriodMillis": 1800000
             }
           ]

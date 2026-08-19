@@ -55,12 +55,14 @@ export const widgetTaskHandler: WidgetTaskHandler = async ({
         dayLabel,
         mealLabel,
         main: meal.main,
+        isLunch,
         dark: false,
       }),
       dark: React.createElement(TodayMenuCompactWidget, {
         dayLabel,
         mealLabel,
         main: meal.main,
+        isLunch,
         dark: true,
       }),
     });

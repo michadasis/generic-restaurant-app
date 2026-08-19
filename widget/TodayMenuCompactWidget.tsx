@@ -1,7 +1,7 @@
 "use no memo";
 
 import * as React from 'react';
-import { FlexWidget, TextWidget } from 'react-native-android-widget';
+import { FlexWidget, ImageWidget, TextWidget } from 'react-native-android-widget';
 import { darkTheme, lightTheme, palette } from '../constants/theme';
 
 type Hex = `#${string}`;
@@ -11,6 +11,7 @@ export interface TodayMenuCompactWidgetProps {
   mealLabel: string;
   dayLabel: string;
   main: string[];
+  isLunch: boolean;
   dark: boolean;
 }
 
@@ -18,9 +19,11 @@ export function TodayMenuCompactWidget({
   mealLabel,
   dayLabel,
   main,
+  isLunch,
   dark,
 }: TodayMenuCompactWidgetProps) {
   const th = dark ? darkTheme : lightTheme;
+  const mealColor = isLunch ? palette.teal : palette.amberDark;
 
   return (
     <FlexWidget
@@ -35,18 +38,40 @@ export function TodayMenuCompactWidget({
         padding: 10,
       }}
     >
-      <TextWidget
-        text={`${dayLabel} · ${mealLabel}`}
-        maxLines={1}
-        truncate="END"
-        style={{ fontSize: 10.5, fontWeight: '800', color: hex(palette.teal), marginBottom: 3 }}
-      />
-      <TextWidget
-        text={main.join(' • ')}
-        maxLines={2}
-        truncate="END"
-        style={{ fontSize: 12.5, fontWeight: '600', color: hex(th.textPrimary), lineHeight: 16 }}
-      />
+      <FlexWidget
+        style={{ flexDirection: 'row', alignItems: 'center', flexGap: 4, marginBottom: 3 }}
+      >
+        <ImageWidget
+          image={require('../assets/images/icon.png')}
+          imageWidth={14}
+          imageHeight={14}
+          radius={4}
+        />
+        <FlexWidget style={{ flex: 1 }}>
+          <TextWidget
+            text={dayLabel}
+            maxLines={1}
+            truncate="END"
+            style={{ fontSize: 10, fontWeight: '800', color: hex(th.textMuted) }}
+          />
+        </FlexWidget>
+        <TextWidget
+          text={mealLabel}
+          maxLines={1}
+          style={{ fontSize: 10, fontWeight: '800', color: hex(mealColor) }}
+        />
+      </FlexWidget>
+      <FlexWidget style={{ flexDirection: 'column' }}>
+        {main.map((item, i) => (
+          <TextWidget
+            key={i}
+            text={`• ${item}`}
+            maxLines={1}
+            truncate="END"
+            style={{ fontSize: 12.5, fontWeight: '600', color: hex(th.textPrimary), lineHeight: 16 }}
+          />
+        ))}
+      </FlexWidget>
     </FlexWidget>
   );
 }
