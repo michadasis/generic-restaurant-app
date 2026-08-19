@@ -25,6 +25,13 @@ function getTodayContext(lang: Lang) {
   return { t, dayMenu, dayLabel };
 }
 
+// Lunch window is 09:00-15:30; dinner covers the rest, wrapping past midnight.
+function isLunchTime(): boolean {
+  const now = new Date();
+  const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
+  return minutesSinceMidnight >= 9 * 60 && minutesSinceMidnight < 15 * 60 + 30;
+}
+
 export const widgetTaskHandler: WidgetTaskHandler = async ({
   widgetInfo,
   widgetAction,
@@ -37,11 +44,9 @@ export const widgetTaskHandler: WidgetTaskHandler = async ({
 
   if (!dayMenu) return;
 
+  const isLunch = isLunchTime();
+
   if (widgetInfo.widgetName === 'TodayMenuCompact') {
-    // Lunch window is 09:00-15:30; dinner covers the rest, wrapping past midnight.
-    const now = new Date();
-    const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
-    const isLunch = minutesSinceMidnight >= 9 * 60 && minutesSinceMidnight < 15 * 60 + 30;
     const meal = isLunch ? dayMenu.lunch : dayMenu.dinner;
     const mealLabel = isLunch ? t.lunch : t.dinner;
 
@@ -67,16 +72,20 @@ export const widgetTaskHandler: WidgetTaskHandler = async ({
       dayLabel,
       mainLabel: t.main,
       firstLabel: t.firstCourse,
+      nowLabel: t.now,
       lunch: { label: t.lunch, main: dayMenu.lunch.main, first: dayMenu.lunch.first },
       dinner: { label: t.dinner, main: dayMenu.dinner.main, first: dayMenu.dinner.first },
+      isLunchNow: isLunch,
       dark: false,
     }),
     dark: React.createElement(TodayMenuFullWidget, {
       dayLabel,
       mainLabel: t.main,
       firstLabel: t.firstCourse,
+      nowLabel: t.now,
       lunch: { label: t.lunch, main: dayMenu.lunch.main, first: dayMenu.lunch.first },
       dinner: { label: t.dinner, main: dayMenu.dinner.main, first: dayMenu.dinner.first },
+      isLunchNow: isLunch,
       dark: true,
     }),
   });
