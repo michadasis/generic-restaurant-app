@@ -1,5 +1,6 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, Platform, StatusBar, Pressable } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, Platform, StatusBar, Pressable, LayoutChangeEvent } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming, interpolate } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -27,6 +28,39 @@ export default function CalendarScreen() {
   // Full month grid by default; picking a date collapses it to a single-row
   // week strip so the day's menu below doesn't need to compete for space.
   const [expanded, setExpanded] = useState(true);
+
+  // The grid and the week strip are stacked in one clipped viewport and the
+  // whole thing is one physical surface sliding — not two separate blocks
+  // cross-fading over each other, which is what read as janky/uncanny.
+  // progress: 1 = grid fully in view, 0 = strip fully in view.
+  const progress   = useSharedValue(1);
+  // Rough fallback sizes so there's no zero-height flash before the real
+  // onLayout measurements land — they're corrected within a frame.
+  const gridHeight  = useSharedValue(260);
+  const stripHeight = useSharedValue(70);
+
+  useEffect(() => {
+    progress.value = withTiming(expanded ? 1 : 0, {
+      duration: 260,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [expanded, progress]);
+
+  const onGridLayout = useCallback((e: LayoutChangeEvent) => {
+    gridHeight.value = e.nativeEvent.layout.height;
+  }, [gridHeight]);
+
+  const onStripLayout = useCallback((e: LayoutChangeEvent) => {
+    stripHeight.value = e.nativeEvent.layout.height;
+  }, [stripHeight]);
+
+  const viewportStyle = useAnimatedStyle(() => ({
+    height: interpolate(progress.value, [0, 1], [stripHeight.value, gridHeight.value]),
+  }));
+
+  const paneStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: interpolate(progress.value, [0, 1], [-gridHeight.value, 0]) }],
+  }));
 
   useFocusEffect(useCallback(() => {
     AsyncStorage.multiGet(['theme', 'lang']).then(pairs => {
@@ -119,23 +153,57 @@ export default function CalendarScreen() {
             </Pressable>
           </View>
 
-          {expanded ? (
-            <>
-              {/* Weekday header */}
-              <View style={s.weekRow}>
-                {t.days.map((d, i) => (
-                  <Text key={i} style={[s.weekLabel, { color: th.textMuted }]}>{d}</Text>
-                ))}
+          {/* Clipped viewport: the grid and the week strip are stacked in one
+              pane below and it's the pane itself that slides — a single
+              physical surface, not two things independently fading. */}
+          <Animated.View style={[s.viewport, viewportStyle]}>
+            <Animated.View style={paneStyle}>
+
+              <View onLayout={onGridLayout} pointerEvents={expanded ? 'auto' : 'none'}>
+                {/* Weekday header */}
+                <View style={s.weekRow}>
+                  {t.days.map((d, i) => (
+                    <Text key={i} style={[s.weekLabel, { color: th.textMuted }]}>{d}</Text>
+                  ))}
+                </View>
+
+                {/* Day grid */}
+                <View style={s.grid}>
+                  {gridCells.map((date, i) => {
+                    if (!date) return <View key={i} style={s.cell} />;
+                    const isSelected = isSameDay(date, selectedDate);
+                    const isToday    = isSameDay(date, today);
+                    return (
+                      <Pressable key={i} onPress={() => pickDate(date)} style={s.cell}>
+                        <View
+                          style={[
+                            s.cellInner,
+                            isSelected && { backgroundColor: palette.teal },
+                            !isSelected && isToday && { borderWidth: 1.5, borderColor: palette.amber },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              s.cellText,
+                              { color: isSelected ? '#fff' : isToday ? palette.amber : th.textPrimary },
+                            ]}
+                          >
+                            {date.getDate()}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </View>
 
-              {/* Day grid */}
-              <View style={s.grid}>
-                {gridCells.map((date, i) => {
-                  if (!date) return <View key={i} style={s.cell} />;
+              <View onLayout={onStripLayout} style={s.stripRow} pointerEvents={!expanded ? 'auto' : 'none'}>
+                {weekStripDates.map((date, i) => {
                   const isSelected = isSameDay(date, selectedDate);
                   const isToday    = isSameDay(date, today);
                   return (
-                    <Pressable key={i} onPress={() => pickDate(date)} style={s.cell}>
+                    <Pressable key={i} onPress={() => setSelectedDate(date)} style={s.stripCell}>
+                      <Text style={[s.stripDayLabel, { color: th.textMuted }]}>{t.days[i]}</Text>
                       <View
                         style={[
                           s.cellInner,
@@ -156,37 +224,9 @@ export default function CalendarScreen() {
                   );
                 })}
               </View>
-            </>
-          ) : (
-            /* Collapsed week strip */
-            <View style={s.stripRow}>
-              {weekStripDates.map((date, i) => {
-                const isSelected = isSameDay(date, selectedDate);
-                const isToday    = isSameDay(date, today);
-                return (
-                  <Pressable key={i} onPress={() => setSelectedDate(date)} style={s.stripCell}>
-                    <Text style={[s.stripDayLabel, { color: th.textMuted }]}>{t.days[i]}</Text>
-                    <View
-                      style={[
-                        s.cellInner,
-                        isSelected && { backgroundColor: palette.teal },
-                        !isSelected && isToday && { borderWidth: 1.5, borderColor: palette.amber },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          s.cellText,
-                          { color: isSelected ? '#fff' : isToday ? palette.amber : th.textPrimary },
-                        ]}
-                      >
-                        {date.getDate()}
-                      </Text>
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
+
+            </Animated.View>
+          </Animated.View>
 
           <Pressable onPress={() => setExpanded(e => !e)} style={s.toggleBtn} hitSlop={8}>
             <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={th.textMuted} />
@@ -233,6 +273,8 @@ const s = StyleSheet.create({
   subtitle:      { fontSize: 13, marginTop: 3 },
   // Card
   card: { borderRadius: 16, padding: 16, marginBottom: 16 },
+  // Sliding grid/strip viewport
+  viewport: { overflow: 'hidden' },
   // Month nav
   monthRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   navBtn:     { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
