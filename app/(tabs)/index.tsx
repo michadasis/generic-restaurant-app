@@ -21,7 +21,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { buildMenu, CYCLE_WEEKS, WeekMenu, DayMenu } from '../../data/menu';
+import { useMenu, WeekMenu, DayMenu } from '../../data/menu';
 import { getTodayKey } from '@/utils/getToday';
 import { getCurrentWeekKey } from '@/utils/getWeek';
 import { getClosureNotice } from '@/utils/getClosureNotice';
@@ -30,6 +30,7 @@ import { UpdateModal } from '@/components/UpdateModal';
 import { i18n, Lang } from '@/constants/i18n';
 import { darkTheme, lightTheme, palette } from '@/constants/theme';
 import { MealSection } from '@/components/MealSection';
+import { MenuSkeleton } from '@/components/MenuSkeleton';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const PEEK = 20;
@@ -49,9 +50,9 @@ const DAY_KEYS: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'frida
 // swiping across a week boundary feels like scrolling to just another day.
 type VirtualDay = { key: string; dayKey: DayKey; weekKey: string; weekDelta: number };
 
-const shiftWeekKey = (weekKey: string, dir: 1 | -1) => {
+const shiftWeekKey = (weekKey: string, dir: 1 | -1, cycleWeeks: number) => {
   const cur  = parseInt(weekKey.replace('week', ''), 10);
-  const next = ((cur - 1 + dir + CYCLE_WEEKS) % CYCLE_WEEKS) + 1;
+  const next = ((cur - 1 + dir + cycleWeeks) % cycleWeeks) + 1;
   return `week${next}`;
 };
 
@@ -59,6 +60,7 @@ export default function HomeScreen() {
   const [lang, setLang]         = useState<Lang>('gr');
   const [dark, setDark]         = useState(true);
   const { updateInfo, dismiss } = useUpdateChecker();
+  const { menu, cycleWeeks, loading: menuLoading, error: menuError, refresh: refreshMenu } = useMenu(lang);
 
   const todayKey   = getTodayKey();
   const todayIndex = DAY_KEYS.indexOf(todayKey);
@@ -67,7 +69,9 @@ export default function HomeScreen() {
   // fit exactly within it, so they never get clipped by the tab bar regardless
   // of how much space the header/notice bar/week bar take up.
   const [cardAreaHeight, setCardAreaHeight]   = useState(0);
-  const [selectedWeek, setSelectedWeek] = useState<string>(getCurrentWeekKey());
+  // Null until cycleWeeks arrives from the DB — no hardcoded cycle length to
+  // compute a guess with in the meantime, see the effect below.
+  const [selectedWeek, setSelectedWeek] = useState<string | null>(null);
   // Number of real calendar weeks the selected week is from the current one (can go negative).
   const [weekOffset, setWeekOffset]     = useState(0);
   // Index into virtualDays (0 = prev-week buffer, 1..7 = Mon..Sun, 8 = next-week buffer).
@@ -98,22 +102,39 @@ export default function HomeScreen() {
   useEffect(() => { AsyncStorage.setItem('lang',  lang); }, [lang]);
   useEffect(() => { AsyncStorage.setItem('theme', dark ? 'dark' : 'light'); }, [dark]);
 
+  // Seed selectedWeek as soon as we know the real cycle length — can't do
+  // this synchronously at init since cycleWeeks only exists once the menu
+  // has loaded from cache/network.
   useEffect(() => {
+    if (cycleWeeks !== null && selectedWeek === null) {
+      setSelectedWeek(getCurrentWeekKey(cycleWeeks));
+    }
+  }, [cycleWeeks, selectedWeek]);
+
+  const hasScrolledInitially = useRef(false);
+  useEffect(() => {
+    if (!menu || hasScrolledInitially.current) return;
+    // Burn the latch only once the scroll actually happens — if `menu`
+    // changes again (e.g. the cache→network refresh) before the timer
+    // fires, cleanup cancels this timer and the effect reruns to
+    // reschedule it, rather than silently skipping the scroll.
     const timer = setTimeout(() => {
       flatListRef.current?.scrollToIndex({ index: todayIndex + 1, animated: false });
+      hasScrolledInitially.current = true;
     }, 150);
     return () => clearTimeout(timer);
-  }, []);
+  }, [menu, todayIndex]);
 
   const virtualDays: VirtualDay[] = useMemo(() => {
-    const prevWeek = shiftWeekKey(selectedWeek, -1);
-    const nextWeek = shiftWeekKey(selectedWeek, 1);
+    if (selectedWeek === null || cycleWeeks === null) return [];
+    const prevWeek = shiftWeekKey(selectedWeek, -1, cycleWeeks);
+    const nextWeek = shiftWeekKey(selectedWeek, 1, cycleWeeks);
     return [
       { key: 'buffer-prev', dayKey: 'sunday', weekKey: prevWeek, weekDelta: -1 },
       ...DAY_KEYS.map(dayKey => ({ key: dayKey, dayKey, weekKey: selectedWeek, weekDelta: 0 })),
       { key: 'buffer-next', dayKey: 'monday', weekKey: nextWeek, weekDelta: 1 },
     ];
-  }, [selectedWeek]);
+  }, [selectedWeek, cycleWeeks]);
   const lastVirtualIndex = virtualDays.length - 1;
 
   // Fires after a week swap re-renders virtualDays; lands the scroll on the
@@ -128,7 +149,6 @@ export default function HomeScreen() {
 
   const th = dark ? darkTheme : lightTheme;
   const t  = i18n[lang];
-  const menu = buildMenu(lang);
   const closureNotice = getClosureNotice();
 
   const goToDay = (localIndex: number) => {
@@ -140,6 +160,7 @@ export default function HomeScreen() {
   };
 
   const onScrollEnd = (e: any) => {
+    if (cycleWeeks === null) return;
     const offsetX = e.nativeEvent.contentOffset.x;
     const idx     = Math.round(offsetX / SNAP_INTERVAL);
     const clamped = Math.max(0, Math.min(idx, lastVirtualIndex));
@@ -148,14 +169,14 @@ export default function HomeScreen() {
 
     if (wasUserDrag && clamped === lastVirtualIndex) {
       // Landed on the next-week-Monday buffer — commit the week forward.
-      setSelectedWeek(prev => shiftWeekKey(prev, 1));
+      setSelectedWeek(prev => shiftWeekKey(prev!, 1, cycleWeeks));
       setWeekOffset(o => o + 1);
       pendingRecenter.current = 1;
       currentIndexRef.current = 1;
       setCurrentDayIndex(1);
     } else if (wasUserDrag && clamped === 0) {
       // Landed on the prev-week-Sunday buffer — commit the week back.
-      setSelectedWeek(prev => shiftWeekKey(prev, -1));
+      setSelectedWeek(prev => shiftWeekKey(prev!, -1, cycleWeeks));
       setWeekOffset(o => o - 1);
       pendingRecenter.current = lastVirtualIndex - 1;
       currentIndexRef.current = lastVirtualIndex - 1;
@@ -177,6 +198,7 @@ export default function HomeScreen() {
   const cardHeight = Math.max(0, cardAreaHeight - CARD_TOP_SPACING - CARD_BOTTOM_SPACING);
 
   const renderCard = ({ item }: { item: VirtualDay; index: number }) => {
+    if (!menu) return null;
     const { dayKey, weekKey, weekDelta } = item;
     const dayMenu = (menu[weekKey] as WeekMenu)?.[dayKey] as DayMenu;
     const isToday = dayKey === todayKey && weekOffset + weekDelta === 0;
@@ -249,54 +271,69 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Day dots */}
-      <View style={s.dotRow}>
-        {DAY_KEYS.map((key, i) => {
-          // currentDayIndex briefly visits the buffer slots (0, lastVirtualIndex)
-          // for a single frame right as a week swap commits — map those back to
-          // the real day they represent (Sunday / Monday) so the dots stay correct.
-          const normalized =
-            currentDayIndex === 0 ? DAY_KEYS.length - 1 :
-            currentDayIndex === lastVirtualIndex ? 0 :
-            currentDayIndex - 1;
-          const isActive = i === normalized;
-          const isToday  = key === todayKey && weekOffset === 0;
-          return (
-            <Pressable
-              key={key}
-              onPress={() => goToDay(i)}
-              style={s.dotWrap}
-            >
-              <Text style={[s.dotLabel, { color: isActive ? palette.teal : isToday ? palette.amber : th.textMuted }]}>
-                {t.days[i]}
-              </Text>
-              <DayDot isActive={isActive} isToday={isToday} idleColor={th.border} />
-            </Pressable>
-          );
-        })}
-      </View>
+      {menu ? (
+        <>
+          {/* Day dots */}
+          <View style={s.dotRow}>
+            {DAY_KEYS.map((key, i) => {
+              // currentDayIndex briefly visits the buffer slots (0, lastVirtualIndex)
+              // for a single frame right as a week swap commits — map those back to
+              // the real day they represent (Sunday / Monday) so the dots stay correct.
+              const normalized =
+                currentDayIndex === 0 ? DAY_KEYS.length - 1 :
+                currentDayIndex === lastVirtualIndex ? 0 :
+                currentDayIndex - 1;
+              const isActive = i === normalized;
+              const isToday  = key === todayKey && weekOffset === 0;
+              return (
+                <Pressable
+                  key={key}
+                  onPress={() => goToDay(i)}
+                  style={s.dotWrap}
+                >
+                  <Text style={[s.dotLabel, { color: isActive ? palette.teal : isToday ? palette.amber : th.textMuted }]}>
+                    {t.days[i]}
+                  </Text>
+                  <DayDot isActive={isActive} isToday={isToday} idleColor={th.border} />
+                </Pressable>
+              );
+            })}
+          </View>
 
-      {/* Cards */}
-      <View
-        style={{ flex: 1 }}
-        onLayout={e => setCardAreaHeight(e.nativeEvent.layout.height)}
-      >
-        <FlatList
-          ref={flatListRef}
-          data={virtualDays}
-          renderItem={renderCard}
-          keyExtractor={item => item.key}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          snapToOffsets={virtualDays.map((_, i) => i * SNAP_INTERVAL)}
-          decelerationRate="fast"
-          contentContainerStyle={{ paddingLeft: PEEK, paddingRight: PEEK - CARD_GAP }}
-          onScrollBeginDrag={() => { didUserDrag.current = true; }}
-          onMomentumScrollEnd={onScrollEnd}
-          getItemLayout={(_, i) => ({ length: SNAP_INTERVAL, offset: SNAP_INTERVAL * i, index: i })}
-          style={{ flex: 1 }}
-        />
-      </View>
+          {/* Cards */}
+          <View
+            style={{ flex: 1 }}
+            onLayout={e => setCardAreaHeight(e.nativeEvent.layout.height)}
+          >
+            <FlatList
+              ref={flatListRef}
+              data={virtualDays}
+              renderItem={renderCard}
+              keyExtractor={item => item.key}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToOffsets={virtualDays.map((_, i) => i * SNAP_INTERVAL)}
+              decelerationRate="fast"
+              contentContainerStyle={{ paddingLeft: PEEK, paddingRight: PEEK - CARD_GAP }}
+              onScrollBeginDrag={() => { didUserDrag.current = true; }}
+              onMomentumScrollEnd={onScrollEnd}
+              getItemLayout={(_, i) => ({ length: SNAP_INTERVAL, offset: SNAP_INTERVAL * i, index: i })}
+              style={{ flex: 1 }}
+            />
+          </View>
+        </>
+      ) : menuError && !menuLoading ? (
+        <View style={s.loadingWrap}>
+          <Text style={[s.noData, { color: th.textMuted }]}>{t.menuLoadError}</Text>
+          <Pressable onPress={refreshMenu} style={[s.iconBtn, { backgroundColor: th.surfaceAlt, marginTop: 14, paddingHorizontal: 16, width: undefined }]}>
+            <Text style={[s.iconBtnLabel, { color: th.textPrimary }]}>{t.retry}</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <View style={[s.card, s.skeletonCard, { backgroundColor: th.surface }]}>
+          <MenuSkeleton th={th} />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -324,6 +361,7 @@ function DayDot({ isActive, isToday, idleColor }: { isActive: boolean; isToday: 
 
 const s = StyleSheet.create({
   root:       { flex: 1 },
+  loadingWrap:{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 30 },
   // Header
   header:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -344,6 +382,7 @@ const s = StyleSheet.create({
   dot:        { width: 6, height: 6, borderRadius: 3 },
   // Card
   card:       { borderRadius: 20, overflow: 'hidden', marginRight: CARD_GAP, marginTop: CARD_TOP_SPACING },
+  skeletonCard: { flex: 1, marginRight: 0, marginHorizontal: PEEK, marginBottom: CARD_BOTTOM_SPACING },
   cardContent:{ padding: 14, paddingBottom: 18 },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', borderBottomWidth: 1, paddingBottom: 9, marginBottom: 11 },
   cardDay:    { fontSize: 18, fontWeight: '800', letterSpacing: -0.3 },

@@ -39,6 +39,9 @@ export const i18n = {
     today:    'Σήμερα',
     months: ['Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος',
              'Ιούλιος', 'Αύγουστος', 'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος'],
+    // Menu loading state
+    menuLoadError: 'Δεν ήταν δυνατή η φόρτωση του μενού.',
+    retry:         'Επανάληψη',
   },
   en: {
     appTitle:    'UoWM Restaurant',
@@ -78,5 +81,8 @@ export const i18n = {
     today:    'Today',
     months: ['January', 'February', 'March', 'April', 'May', 'June',
              'July', 'August', 'September', 'October', 'November', 'December'],
+    // Menu loading state
+    menuLoadError: 'Could not load the menu.',
+    retry:         'Retry',
   },
 };
