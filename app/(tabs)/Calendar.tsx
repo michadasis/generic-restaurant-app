@@ -224,7 +224,7 @@ export default function CalendarScreen() {
               </Pressable>
             </View>
           ) : (
-            <MenuSkeleton th={th} showHeader={false} padded={false} />
+            <MenuSkeleton th={th} t={t} showHeader={false} padded={false} />
           )}
         </View>
 

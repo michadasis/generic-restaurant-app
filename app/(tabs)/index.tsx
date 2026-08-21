@@ -151,6 +151,13 @@ export default function HomeScreen() {
   const t  = i18n[lang];
   const closureNotice = getClosureNotice();
 
+  // Day/date are known immediately (unlike the menu itself), so the loading
+  // skeleton can show today's real header instead of a placeholder block —
+  // it's always today's card since we land there right after data arrives.
+  const todayFullDay = t.fullDays[todayIndex];
+  const now = new Date();
+  const todayDateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+
   const goToDay = (localIndex: number) => {
     const target = localIndex + 1;
     if (target === currentIndexRef.current) return;
@@ -330,8 +337,26 @@ export default function HomeScreen() {
           </Pressable>
         </View>
       ) : (
-        <View style={[s.card, s.skeletonCard, { backgroundColor: th.surface }]}>
-          <MenuSkeleton th={th} />
+        <View style={s.skeletonWrap}>
+          {/* Slivers of the adjacent days' cards peeking in from off-screen,
+              matching the FlatList carousel's peek/snap layout once it's live. */}
+          <View style={[s.skeletonSliver, s.skeletonSliverLeft, { backgroundColor: th.surface }]} />
+          <View style={[s.skeletonSliver, s.skeletonSliverRight, { backgroundColor: th.surface }]} />
+
+          <View style={[s.card, s.skeletonCard, { backgroundColor: th.surface }]}>
+            <View style={s.skeletonContent}>
+              <View style={[s.cardHeader, { borderBottomColor: th.border }]}>
+                <View>
+                  <Text style={[s.cardDay, { color: th.textPrimary }]}>{todayFullDay}</Text>
+                  <Text style={[s.cardDate, { color: th.textMuted }]}>{todayDateStr}</Text>
+                </View>
+                <View style={[s.todayBadge, { backgroundColor: palette.amber }]}>
+                  <Text style={s.todayBadgeText}>{lang === 'gr' ? 'Σήμερα' : 'Today'}</Text>
+                </View>
+              </View>
+              <MenuSkeleton th={th} t={t} showHeader={false} padded={false} fill />
+            </View>
+          </View>
         </View>
       )}
     </SafeAreaView>
@@ -382,7 +407,16 @@ const s = StyleSheet.create({
   dot:        { width: 6, height: 6, borderRadius: 3 },
   // Card
   card:       { borderRadius: 20, overflow: 'hidden', marginRight: CARD_GAP, marginTop: CARD_TOP_SPACING },
-  skeletonCard: { flex: 1, marginRight: 0, marginHorizontal: PEEK, marginBottom: CARD_BOTTOM_SPACING },
+  skeletonWrap:   { flex: 1 },
+  // Thin strips of card color peeking in from the screen edges — same width
+  // as what's actually visible of a neighboring day's card in the real
+  // carousel (PEEK minus the inter-card gap), so the loading state doesn't
+  // look like a single static page the way the old full-bleed skeleton did.
+  skeletonSliver: { position: 'absolute', top: CARD_TOP_SPACING, bottom: CARD_BOTTOM_SPACING, width: PEEK - CARD_GAP },
+  skeletonSliverLeft:  { left: 0, borderTopRightRadius: 20, borderBottomRightRadius: 20 },
+  skeletonSliverRight: { right: 0, borderTopLeftRadius: 20, borderBottomLeftRadius: 20 },
+  skeletonCard:   { flex: 1, marginLeft: PEEK, marginRight: PEEK, marginBottom: CARD_BOTTOM_SPACING },
+  skeletonContent:{ flex: 1, padding: 14, paddingBottom: 18 },
   cardContent:{ padding: 14, paddingBottom: 18 },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', borderBottomWidth: 1, paddingBottom: 9, marginBottom: 11 },
   cardDay:    { fontSize: 18, fontWeight: '800', letterSpacing: -0.3 },
