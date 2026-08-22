@@ -3,6 +3,7 @@ import type { WidgetTaskHandler } from 'react-native-android-widget';
 import * as React from 'react';
 import { i18n, type Lang } from '../constants/i18n';
 import { buildMenu, type DayMenu } from '../data/menu';
+import { loadRawMenu } from '../data/menuService';
 import { getTodayKey } from '../utils/getToday';
 import { getCurrentWeekKey } from '../utils/getWeek';
 import { TodayMenuCompactWidget } from './TodayMenuCompactWidget';
@@ -15,11 +16,15 @@ async function getLang(): Promise<Lang> {
   return stored === 'en' ? 'en' : 'gr';
 }
 
-function getTodayContext(lang: Lang) {
+async function getTodayContext(lang: Lang) {
   const t = i18n[lang];
-  const menu = buildMenu(lang);
+  // Network-first with a cache fallback (see data/menuService.ts) — picks up
+  // menu changes on its own refresh schedule without needing the app opened,
+  // and still renders from the last-known copy if there's no connectivity.
+  const raw = await loadRawMenu();
+  const menu = buildMenu(raw, lang);
   const dayKey = getTodayKey();
-  const weekKey = getCurrentWeekKey(menu);
+  const weekKey = getCurrentWeekKey(raw.cycleWeeks);
   const dayMenu = (menu[weekKey] as Record<string, DayMenu> | undefined)?.[dayKey];
   const dayLabel = t.fullDays[DAY_KEYS.indexOf(dayKey as (typeof DAY_KEYS)[number])];
   return { t, dayMenu, dayLabel };
@@ -40,7 +45,15 @@ export const widgetTaskHandler: WidgetTaskHandler = async ({
   if (widgetAction === 'WIDGET_DELETED') return;
 
   const lang = await getLang();
-  const { t, dayMenu, dayLabel } = getTodayContext(lang);
+  let context: Awaited<ReturnType<typeof getTodayContext>>;
+  try {
+    context = await getTodayContext(lang);
+  } catch {
+    // No cache yet and no network reachable — nothing to render this cycle;
+    // the widget keeps showing whatever it last successfully rendered.
+    return;
+  }
+  const { t, dayMenu, dayLabel } = context;
 
   if (!dayMenu) return;
 
@@ -57,6 +70,7 @@ export const widgetTaskHandler: WidgetTaskHandler = async ({
         main: meal.main,
         isLunch,
         dark: false,
+        heightDp: widgetInfo.height,
       }),
       dark: React.createElement(TodayMenuCompactWidget, {
         dayLabel,
@@ -64,6 +78,7 @@ export const widgetTaskHandler: WidgetTaskHandler = async ({
         main: meal.main,
         isLunch,
         dark: true,
+        heightDp: widgetInfo.height,
       }),
     });
     return;
@@ -74,21 +89,21 @@ export const widgetTaskHandler: WidgetTaskHandler = async ({
       dayLabel,
       mainLabel: t.main,
       firstLabel: t.firstCourse,
-      nowLabel: t.now,
       lunch: { label: t.lunch, main: dayMenu.lunch.main, first: dayMenu.lunch.first },
       dinner: { label: t.dinner, main: dayMenu.dinner.main, first: dayMenu.dinner.first },
       isLunchNow: isLunch,
       dark: false,
+      heightDp: widgetInfo.height,
     }),
     dark: React.createElement(TodayMenuFullWidget, {
       dayLabel,
       mainLabel: t.main,
       firstLabel: t.firstCourse,
-      nowLabel: t.now,
       lunch: { label: t.lunch, main: dayMenu.lunch.main, first: dayMenu.lunch.first },
       dinner: { label: t.dinner, main: dayMenu.dinner.main, first: dayMenu.dinner.first },
       isLunchNow: isLunch,
       dark: true,
+      heightDp: widgetInfo.height,
     }),
   });
 };

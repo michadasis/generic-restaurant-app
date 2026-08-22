@@ -13,7 +13,13 @@ export interface TodayMenuCompactWidgetProps {
   main: string[];
   isLunch: boolean;
   dark: boolean;
+  heightDp: number;
 }
+
+// Header row (icon + labels, incl. its margin-bottom) plus the outer padding
+// take up roughly this much vertical space before any dish line is drawn.
+const HEADER_AND_PADDING = 37;
+const ITEM_LINE_HEIGHT = 16;
 
 export function TodayMenuCompactWidget({
   mealLabel,
@@ -21,9 +27,13 @@ export function TodayMenuCompactWidget({
   main,
   isLunch,
   dark,
+  heightDp,
 }: TodayMenuCompactWidgetProps) {
   const th = dark ? darkTheme : lightTheme;
   const mealColor = isLunch ? palette.teal : palette.amberDark;
+  const available = Math.max(heightDp - HEADER_AND_PADDING, ITEM_LINE_HEIGHT);
+  const maxItems = Math.max(1, Math.floor(available / ITEM_LINE_HEIGHT));
+  const items = main.slice(0, maxItems);
 
   return (
     <FlexWidget
@@ -62,7 +72,7 @@ export function TodayMenuCompactWidget({
         />
       </FlexWidget>
       <FlexWidget style={{ flexDirection: 'column' }}>
-        {main.map((item, i) => (
+        {items.map((item, i) => (
           <TextWidget
             key={i}
             text={`• ${item}`}

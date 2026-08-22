@@ -5,12 +5,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { buildMenu, WeekMenu, DayMenu } from '@/data/menu';
+import { useMenu, WeekMenu, DayMenu } from '@/data/menu';
 import { getDayKeyForDate } from '@/utils/getToday';
 import { getWeekKeyForDate } from '@/utils/getWeek';
 import { i18n, Lang } from '@/constants/i18n';
 import { darkTheme, lightTheme, palette } from '@/constants/theme';
 import { MealSection } from '@/components/MealSection';
+import { MenuSkeleton } from '@/components/MenuSkeleton';
 
 type DayKey = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 const DAY_KEYS: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -76,11 +77,11 @@ export default function CalendarScreen() {
   // The tab bar floats over the screen (position: 'absolute' in the tabs layout),
   // so its height isn't reserved automatically — pad the scroll content ourselves.
   const tabBarHeight = useBottomTabBarHeight();
-  const menu    = buildMenu(lang);
+  const { menu, cycleWeeks, error: menuError, refresh: refreshMenu } = useMenu(lang);
 
   const dayKey  = getDayKeyForDate(selectedDate);
-  const weekKey = getWeekKeyForDate(selectedDate);
-  const dayMenu = (menu[weekKey] as WeekMenu)?.[dayKey] as DayMenu;
+  const weekKey = cycleWeeks !== null ? getWeekKeyForDate(selectedDate, cycleWeeks) : null;
+  const dayMenu = menu && weekKey ? ((menu[weekKey] as WeekMenu)?.[dayKey] as DayMenu) : undefined;
   const fullDay = t.fullDays[DAY_KEYS.indexOf(dayKey)];
   const dateStr = `${String(selectedDate.getDate()).padStart(2, '0')}/${String(selectedDate.getMonth() + 1).padStart(2, '0')}/${selectedDate.getFullYear()}`;
 
@@ -253,8 +254,17 @@ export default function CalendarScreen() {
               <View style={[s.sectionDivider, { backgroundColor: th.border }]} />
               <MealSection label={t.dinner} meal={dayMenu.dinner} extra={dayMenu.dinnerExtra} t={t} th={th} />
             </>
-          ) : (
+          ) : menu ? (
             <Text style={[s.noData, { color: th.textMuted }]}>—</Text>
+          ) : menuError ? (
+            <View style={{ alignItems: 'center' }}>
+              <Text style={[s.noData, { color: th.textMuted }]}>{t.menuLoadError}</Text>
+              <Pressable onPress={refreshMenu} style={[s.navBtn, { backgroundColor: th.surfaceAlt, width: undefined, paddingHorizontal: 16, marginTop: 8 }]}>
+                <Text style={{ color: th.textPrimary, fontWeight: '700' }}>{t.retry}</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <MenuSkeleton th={th} t={t} showHeader={false} padded={false} />
           )}
         </View>
 

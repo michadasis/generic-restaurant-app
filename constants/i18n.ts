@@ -9,7 +9,6 @@ export const i18n = {
     fullDays:    ['Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο', 'Κυριακή'],
     lunch:       'Μεσημεριανό',
     dinner:      'Βραδινό',
-    now:         'ΤΩΡΑ',
     firstCourse: 'Πρώτο Πιάτο',
     mainCourse:  'Κυρίως Πιάτο',
     main:        'Κυρίως',
@@ -39,6 +38,9 @@ export const i18n = {
     today:    'Σήμερα',
     months: ['Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος',
              'Ιούλιος', 'Αύγουστος', 'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος'],
+    // Menu loading state
+    menuLoadError: 'Δεν ήταν δυνατή η φόρτωση του μενού.',
+    retry:         'Επανάληψη',
   },
   en: {
     appTitle:    'UoWM Restaurant',
@@ -48,7 +50,6 @@ export const i18n = {
     fullDays:    ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
     lunch:       'Lunch',
     dinner:      'Dinner',
-    now:         'NOW',
     firstCourse: 'First Course',
     mainCourse:  'Main Course',
     main:        'Main',
@@ -78,5 +79,8 @@ export const i18n = {
     today:    'Today',
     months: ['January', 'February', 'March', 'April', 'May', 'June',
              'July', 'August', 'September', 'October', 'November', 'December'],
+    // Menu loading state
+    menuLoadError: 'Could not load the menu.',
+    retry:         'Retry',
   },
 };
