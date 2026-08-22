@@ -31,11 +31,14 @@ It's Android only for now. There's no iOS build.
 
 * Figures out the current week in the cycle on its own, based on today's date
 * Swipe through the days, with the week rolling over automatically at the edges
+* A calendar screen to jump straight to any day, not just the current week
+* Android home screen widgets (compact and full) showing today's menu, updating on their own throughout the day
 * Dark mode and light mode, switchable with one tap, remembered for next time
 * Greek and English, switchable the same way
 * Checks GitHub on launch and lets you know if a newer version is out
 * Colors pulled from the actual UoWM logo, teal and amber
 * Gives you a heads-up if the restaurant's probably closed, around the summer break and right when a new academic year is about to start
+* Menu comes from a Supabase database, cached on-device so it still shows the last-known menu offline
 
 ## How the code is laid out
 
@@ -43,11 +46,14 @@ It's Android only for now. There's no iOS build.
 app/
   (tabs)/
     index.tsx       the main menu screen, this is where most of the logic lives
+    Calendar.tsx     jump to any day, not just the current week
     About.tsx        the about screen
     _layout.tsx      tab navigation
   _layout.tsx        root layout
 
 components/
+  MealSection.tsx    renders a single meal (lunch/dinner) block on the menu screen
+  MenuSkeleton.tsx   loading placeholder that mirrors the real menu card
   UpdateModal.tsx    the popup that shows up when a new version is available
 
 constants/
@@ -65,6 +71,11 @@ utils/
   getToday.ts          works out today's day and its label
   getWeek.ts           works out which week of the cycle we're in
   getClosureNotice.ts  works out if the restaurant's likely closed for the summer break or not open yet for the new one
+
+widget/
+  TodayMenuCompactWidget.tsx  small home screen widget, today's current meal only
+  TodayMenuFullWidget.tsx     bigger widget, both lunch and dinner at a glance
+  widget-task-handler.ts      builds the widget's data and re-renders it on schedule
 ```
 
 ## Running it yourself
@@ -75,14 +86,22 @@ You'll need the EAS CLI installed globally first.
 npm i -g eas-cli
 ```
 
-Then clone the repo and start it up.
+Then clone the repo, set up your environment, and start it up.
 
 ```bash
 git clone https://github.com/michadasis/generic-restaurant-app.git
 cd generic-restaurant-app
 npm i
+cp .env.example .env
+```
+
+Fill in `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` in `.env` from your Supabase project's API settings, then:
+
+```bash
 npm run start
 ```
+
+The home screen widgets rely on native code (`react-native-android-widget`), so they won't render inside plain Expo Go — you'll need a [dev client](https://docs.expo.dev/develop/development-builds/introduction/) build (`eas build --profile development`) to see them.
 
 To build an APK for testing:
 
