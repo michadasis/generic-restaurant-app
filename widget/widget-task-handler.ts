@@ -70,6 +70,7 @@ export const widgetTaskHandler: WidgetTaskHandler = async ({
         main: meal.main,
         isLunch,
         dark: false,
+        heightDp: widgetInfo.height,
       }),
       dark: React.createElement(TodayMenuCompactWidget, {
         dayLabel,
@@ -77,6 +78,7 @@ export const widgetTaskHandler: WidgetTaskHandler = async ({
         main: meal.main,
         isLunch,
         dark: true,
+        heightDp: widgetInfo.height,
       }),
     });
     return;
@@ -87,21 +89,21 @@ export const widgetTaskHandler: WidgetTaskHandler = async ({
       dayLabel,
       mainLabel: t.main,
       firstLabel: t.firstCourse,
-      nowLabel: t.now,
       lunch: { label: t.lunch, main: dayMenu.lunch.main, first: dayMenu.lunch.first },
       dinner: { label: t.dinner, main: dayMenu.dinner.main, first: dayMenu.dinner.first },
       isLunchNow: isLunch,
       dark: false,
+      heightDp: widgetInfo.height,
     }),
     dark: React.createElement(TodayMenuFullWidget, {
       dayLabel,
       mainLabel: t.main,
       firstLabel: t.firstCourse,
-      nowLabel: t.now,
       lunch: { label: t.lunch, main: dayMenu.lunch.main, first: dayMenu.lunch.first },
       dinner: { label: t.dinner, main: dayMenu.dinner.main, first: dayMenu.dinner.first },
       isLunchNow: isLunch,
       dark: true,
+      heightDp: widgetInfo.height,
     }),
   });
 };
