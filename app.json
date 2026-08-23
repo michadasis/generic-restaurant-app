@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Λέσχη UoWM",
+    "name": "UoWM Restaurant",
     "slug": "restaurant-app",
     "version": "1.9.1",
     "orientation": "portrait",
@@ -45,6 +45,7 @@
         }
       ],
       "expo-web-browser",
+      "./plugins/withLocalizedAppName",
       [
         "react-native-android-widget",
         {
