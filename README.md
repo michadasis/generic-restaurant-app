@@ -15,8 +15,10 @@ The menu cycle is variable from the university, however the app figures out on i
 ## Screenshots
 
 <div align="center">
-  <img src="assets/images/Dark.jpg" width="220" />
-  <img src="assets/images/Light.jpg" width="220" />
+  <img src="assets/images/Home-Dark.jpg" width="220" />
+  <img src="assets/images/Home-Light.jpg" width="220" />
+  <img src="assets/images/Calendar-Dark.jpg" width="220" />
+  <img src="assets/images/Calendar-Light.jpg" width="220" />
 </div>
 
 ## Installation
