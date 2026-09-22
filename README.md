@@ -41,14 +41,16 @@ It's Android only for now. There's no iOS build.
 * Colors pulled from the actual UoWM logo, teal and amber
 * Gives you a heads up if the restaurant's probably closed, around the summer break and right when a new academic year is about to start
 * Menu comes from a Supabase database, cached on device so it still shows the last known menu offline
+* A Suggestions tab where anyone can post an idea and upvote/downvote others', no account needed
 
 ## How the code is laid out
 
 ```
 app/
   (tabs)/
-    index.tsx       the main menu screen, this is where most of the logic lives
+    index.tsx        the main menu screen, this is where most of the logic lives
     Calendar.tsx     jump to any day, not just the current week
+    Suggestions.tsx  browse/post/vote on suggestions
     About.tsx        the about screen
     _layout.tsx      tab navigation
   _layout.tsx        root layout
@@ -63,8 +65,10 @@ constants/
   theme.ts           the color palette and the dark and light theme objects
 
 data/
-  menu.ts            types, the raw-to-display transform, and the useMenu hook screens read from
-  menuService.ts     fetches/caches the menu from Supabase (network-first, AsyncStorage fallback)
+  menu.ts               types, the raw-to-display transform, and the useMenu hook screens read from
+  menuService.ts        fetches/caches the menu from Supabase (network-first, AsyncStorage fallback)
+  suggestions.ts        the useSuggestions hook — list/create/vote, with per-device vote state in AsyncStorage
+  suggestionsService.ts fetches/posts/votes on suggestions over Supabase's REST API (separate project, see below)
 
 hooks/
   useUpdateChecker.ts  checks the GitHub releases API for a newer version
@@ -97,7 +101,7 @@ npm i
 cp .env.example .env
 ```
 
-Fill in `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` in `.env` from your Supabase project's API settings, then:
+Fill in `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` in `.env` from your Supabase project's API settings. For the Suggestions tab, create a **second, separate** Supabase project (see [Suggestions backend](#suggestions-backend) below), run `supabase/suggestions.sql` in its SQL editor, and fill in `EXPO_PUBLIC_SUGGESTIONS_SUPABASE_URL` / `EXPO_PUBLIC_SUGGESTIONS_SUPABASE_ANON_KEY` from that project's API settings. Then:
 
 ```bash
 npm run start
@@ -124,6 +128,15 @@ The menu lives in a Supabase Postgres database (`menu_meta`, `breakfast_items`, 
 If you do need to do it manually, run that repo's CLI against the PDF to get a `restaurantMenu.sql` (it creates the three tables if they don't exist, truncates them, and inserts the parsed menu) and apply it in the Supabase SQL editor, or edit the rows directly. The watcher's `/api/generate-sql` endpoint returns the same SQL without writing anything, which is handy for checking what the parser produced before applying it.
 
 The app talks to Supabase over its public REST API using only the anon key (`EXPO_PUBLIC_SUPABASE_ANON_KEY` in `.env`, which is gitignored, copy `.env.example`), which Row Level Security restricts to read only. The write side belongs to the watcher, which holds its own `POSTGRES_URL` in its Vercel environment. The service_role key, JWT secret, and raw Postgres connection string must never be added to this app's `.env` or committed, because they grant full write/admin access to the database.
+
+## Suggestions backend
+
+The Suggestions tab reads/writes a **separate** Supabase project from the menu — deliberately, because the menu database's tables get overwritten wholesale by a daily cron job, and suggestions submitted by students shouldn't get wiped out by that.
+
+Schema (table, RLS policies, and the `vote_suggestion` function the app votes through) lives in `supabase/suggestions.sql` — run it once in that project's SQL editor. A couple of things worth knowing as the admin:
+
+* Each suggestion's `email` column is only in the base `suggestions` table, never exposed through the anon key — the app only ever reads from the `suggestions_public` view, which leaves it out. To see who submitted what, query the `suggestions` table directly (Table Editor, or `select * from suggestions order by created_at desc`) with your own Supabase login.
+* Voting has no sign-in behind it, so it can't be tied to a person or even reliably to a device — the app only remembers a suggestion's vote locally (AsyncStorage) to stop accidental double-votes from within the app itself. Someone calling the API directly with the anon key could still inflate/deflate a score; fine for a small trusted user base, but worth knowing.
 
 ## Credits
 

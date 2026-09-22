@@ -72,6 +72,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="Suggestions"
+        options={{
+          title: t.tabSuggestions,
+          tabBarIcon: ({ color, size }) => <Ionicons name="bulb-outline" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="About"
         options={{
           title: t.tabAbout,

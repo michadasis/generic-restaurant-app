@@ -50,12 +50,7 @@ export default function AboutScreen() {
         {/* About card */}
         <View style={[s.card, { backgroundColor: th.surface }]}>
           <CardHeading icon="information-circle-outline" label={t.aboutTitle} th={th} />
-          <Text style={[s.body, { color: th.textSecondary }]}>{t.aboutDesc1}</Text>
-          <Text style={[s.body, { color: th.textSecondary, marginBottom: 14 }]}>{t.aboutDesc2}</Text>
-          <View style={[s.techChip, { backgroundColor: palette.teal + '18' }]}>
-            <Ionicons name="code-slash-outline" size={13} color={palette.teal} />
-            <Text style={[s.techChipText, { color: palette.teal }]}>{t.techBuiltWith}</Text>
-          </View>
+          <Text style={[s.body, { color: th.textSecondary, marginBottom: 0 }]}>{t.aboutDesc1}</Text>
         </View>
 
         {/* Credits card */}
@@ -143,8 +138,6 @@ const s = StyleSheet.create({
   cardTitle:{ fontSize: 16, fontWeight: '800', letterSpacing: -0.2 },
   divider:  { height: 1, marginVertical: 12 },
   body:     { fontSize: 14, lineHeight: 22, marginBottom: 8 },
-  techChip: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
-  techChipText: { fontSize: 12, fontWeight: '700' },
   // Credits
   creditRow:     { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
   creditIconWrap:{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
