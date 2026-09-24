@@ -29,7 +29,7 @@ const s = StyleSheet.create({
   header:   { paddingHorizontal: 20, paddingTop: 20, marginBottom: 16 },
   row:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  logoImg:  { width: 30, height: 30, borderRadius: 8, overflow: 'hidden' },
-  title:    { fontSize: 22, fontWeight: '800', letterSpacing: -0.4 },
+  logoImg:  { width: 36, height: 36, borderRadius: 9, overflow: 'hidden' },
+  title:    { fontSize: 19, fontWeight: '800', letterSpacing: -0.3 },
   subtitle: { fontSize: 13, marginTop: 6 },
 });

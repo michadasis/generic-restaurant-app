@@ -25,22 +25,24 @@ export function BreakfastSection({ breakfast, t, th }: {
       <Text style={[s.mealSectionLabel, { color: palette.amber }]} maxFontSizeMultiplier={FONT_SCALE_CAP}>
         {t.breakfastLabel}
       </Text>
-      {CATEGORY_KEYS.map((key, i) => {
-        const items = breakfast[key];
-        if (!items || items.length === 0) return null;
-        return (
-          <View key={key} style={i > 0 ? s.group : undefined}>
-            <Text style={[s.mealSubLabel, { color: th.textMuted }]} maxFontSizeMultiplier={FONT_SCALE_CAP}>
-              {t[CATEGORY_ORDER[i]]}
-            </Text>
-            {items.map((item, j) => (
-              <Text key={j} style={[s.mealItem, { color: th.textPrimary }]} maxFontSizeMultiplier={FONT_SCALE_CAP}>
-                {item}
+      <View style={s.grid}>
+        {CATEGORY_KEYS.map((key, i) => {
+          const items = breakfast[key];
+          if (!items || items.length === 0) return null;
+          return (
+            <View key={key} style={s.gridItem}>
+              <Text style={[s.mealSubLabel, { color: th.textMuted }]} maxFontSizeMultiplier={FONT_SCALE_CAP}>
+                {t[CATEGORY_ORDER[i]]}
               </Text>
-            ))}
-          </View>
-        );
-      })}
+              {items.map((item, j) => (
+                <Text key={j} style={[s.mealItem, { color: th.textPrimary }]} maxFontSizeMultiplier={FONT_SCALE_CAP}>
+                  {item}
+                </Text>
+              ))}
+            </View>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -48,7 +50,10 @@ export function BreakfastSection({ breakfast, t, th }: {
 const s = StyleSheet.create({
   mealSection:   { marginBottom: 2 },
   mealSectionLabel: { fontSize: 16, fontWeight: '800', marginBottom: 5, letterSpacing: 0.2 },
+  // Four short categories side by side reads far better than one long vertical
+  // stack — the card has the width to spare, so lay them out as a 2x2 grid.
+  grid:          { flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 8 },
+  gridItem:      { width: '44%', flexGrow: 1 },
   mealSubLabel:  { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 3 },
   mealItem:      { fontSize: 14.5, lineHeight: 19, marginBottom: 2 },
-  group:         { marginTop: 6 },
 });

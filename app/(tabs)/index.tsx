@@ -47,9 +47,6 @@ const CARD_BOTTOM_SPACING = 20; // gap between the card and the floating tab bar
 // internal ScrollView to scroll. Cap scaling on that text so it stays legible
 // without ever pushing content past the fixed card height.
 const CARD_FONT_SCALE_CAP = 1.3;
-// Fixed app brand name shown on Home regardless of the selected in-app
-// language — unlike page titles elsewhere, this one doesn't translate.
-const HOME_TITLE = 'UoWM Restaurant';
 
 type DayKey = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 const DAY_KEYS: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -276,7 +273,7 @@ export default function HomeScreen() {
 
       <PageHeader
         th={th}
-        title={HOME_TITLE}
+        title={t.appTitle}
         subtitle={t.subtitle}
         right={
           <Pressable onPress={() => router.push('/Settings')} style={[s.iconBtn, { backgroundColor: th.surfaceAlt }]}>

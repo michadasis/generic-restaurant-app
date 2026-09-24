@@ -42,8 +42,9 @@ function MealBlockSkeleton({ mealLabel, t, color, th, nextDelay }: {
   );
 }
 
-// Breakfast has no first-course/extra split — just a couple of category
-// groups — so it gets its own, shorter block instead of reusing MealBlockSkeleton.
+// Breakfast has no first-course/extra split — just four short category
+// groups laid out 2x2 (matching BreakfastSection's real grid), so it gets its
+// own block instead of reusing MealBlockSkeleton's vertical layout.
 function BreakfastBlockSkeleton({ t, color, th, nextDelay }: {
   t: typeof i18n['gr'];
   color: string;
@@ -53,8 +54,20 @@ function BreakfastBlockSkeleton({ t, color, th, nextDelay }: {
   return (
     <View style={s.mealBlock}>
       <Text style={[s.mealSectionLabel, { color: palette.amber }]}>{t.breakfastLabel}</Text>
-      <LabelGroup label={t.breakfastStaples} lines={['70%', '50%']} color={color} th={th} nextDelay={nextDelay} />
-      <LabelGroup label={t.breakfastDrinks} lines={['45%']} color={color} th={th} nextDelay={nextDelay} />
+      <View style={s.grid}>
+        <View style={s.gridItem}>
+          <LabelGroup label={t.breakfastStaples} lines={['70%', '50%']} color={color} th={th} nextDelay={nextDelay} />
+        </View>
+        <View style={s.gridItem}>
+          <LabelGroup label={t.breakfastBreads} lines={['60%']} color={color} th={th} nextDelay={nextDelay} />
+        </View>
+        <View style={s.gridItem}>
+          <LabelGroup label={t.breakfastSpreads} lines={['55%', '40%']} color={color} th={th} nextDelay={nextDelay} />
+        </View>
+        <View style={s.gridItem}>
+          <LabelGroup label={t.breakfastDrinks} lines={['45%']} color={color} th={th} nextDelay={nextDelay} />
+        </View>
+      </View>
     </View>
   );
 }
@@ -119,6 +132,8 @@ const s = StyleSheet.create({
   header:      { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, borderBottomWidth: 1, paddingBottom: 9, marginBottom: 14 },
   headerGroup: { gap: 8 },
   mealBlock:   { gap: 10 },
+  grid:        { flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 8 },
+  gridItem:    { width: '44%', flexGrow: 1 },
   // Matches MealSection's own label styles exactly, so the real labels sit
   // in precisely the layout the loaded card will replace them into.
   mealSectionLabel: { fontSize: 16, fontWeight: '800', letterSpacing: 0.2 },

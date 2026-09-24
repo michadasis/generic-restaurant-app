@@ -53,7 +53,7 @@ export default function SettingsScreen() {
         <PageHeader th={th} title={t.settingsTitle} subtitle={t.settingsSubtitle} />
 
         {/* Appearance */}
-        <SettingsCard icon="color-palette-outline" label={t.sectionAppearance} th={th}>
+        <SettingsCard icon="contrast-outline" label={t.sectionAppearance} th={th}>
           <ToggleRow label={t.darkModeLabel} value={dark} onValueChange={toggleDark} th={th} />
           <View style={[s.rowDivider, { backgroundColor: th.border }]} />
           <View style={s.toggleRow}>
@@ -76,7 +76,7 @@ export default function SettingsScreen() {
         </SettingsCard>
 
         {/* Menu preferences */}
-        <SettingsCard icon="restaurant-outline" label={t.sectionMenuPrefs} th={th}>
+        <SettingsCard icon="cafe-outline" label={t.sectionMenuPrefs} th={th}>
           <ToggleRow
             label={t.showBreakfastLabel}
             description={t.showBreakfastDesc}
