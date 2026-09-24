@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Dimensions,
   FlatList,
-  Image,
   Platform,
   Pressable,
   SafeAreaView,
@@ -21,6 +20,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useFocusEffect, useRouter } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMenu, WeekMenu, DayMenu } from '../../data/menu';
 import { getTodayKey } from '@/utils/getToday';
 import { getCurrentWeekKey } from '@/utils/getWeek';
@@ -30,7 +31,9 @@ import { UpdateModal } from '@/components/UpdateModal';
 import { i18n, Lang } from '@/constants/i18n';
 import { darkTheme, lightTheme, palette } from '@/constants/theme';
 import { MealSection } from '@/components/MealSection';
+import { BreakfastSection } from '@/components/BreakfastSection';
 import { MenuSkeleton } from '@/components/MenuSkeleton';
+import { PageHeader } from '@/components/PageHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const PEEK = 20;
@@ -39,6 +42,14 @@ const CARD_WIDTH = SCREEN_WIDTH - PEEK * 2;
 const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
 const CARD_TOP_SPACING = 14; // must match s.card's marginTop
 const CARD_BOTTOM_SPACING = 20; // gap between the card and the floating tab bar
+// Card height is fixed to the measured available space, so on devices with a
+// larger system font size the meal text can grow past it and force the card's
+// internal ScrollView to scroll. Cap scaling on that text so it stays legible
+// without ever pushing content past the fixed card height.
+const CARD_FONT_SCALE_CAP = 1.3;
+// Fixed app brand name shown on Home regardless of the selected in-app
+// language — unlike page titles elsewhere, this one doesn't translate.
+const HOME_TITLE = 'UoWM Restaurant';
 
 type DayKey = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 const DAY_KEYS: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -57,8 +68,10 @@ const shiftWeekKey = (weekKey: string, dir: 1 | -1, cycleWeeks: number) => {
 };
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [lang, setLang]         = useState<Lang>('gr');
   const [dark, setDark]         = useState(true);
+  const [showBreakfast, setShowBreakfast] = useState(false);
   const { updateInfo, dismiss } = useUpdateChecker();
   const { menu, cycleWeeks, loading: menuLoading, error: menuError, refresh: refreshMenu } = useMenu(lang);
 
@@ -91,13 +104,16 @@ export default function HomeScreen() {
   // so its height isn't reserved automatically — pad the bottom ourselves.
   const tabBarHeight = useBottomTabBarHeight();
 
-  useEffect(() => {
-    AsyncStorage.multiGet(['lang', 'theme']).then(pairs => {
+  // useFocusEffect (not a plain useEffect) so returning from the Settings
+  // screen — where these are actually changed now — picks up the new values.
+  useFocusEffect(useCallback(() => {
+    AsyncStorage.multiGet(['lang', 'theme', 'showBreakfast']).then(pairs => {
       const map = Object.fromEntries(pairs);
       if (map.lang === 'en' || map.lang === 'gr') setLang(map.lang as Lang);
       if (map.theme !== null) setDark(map.theme === 'dark');
+      setShowBreakfast(map.showBreakfast === 'true');
     });
-  }, []);
+  }, []));
 
   useEffect(() => { AsyncStorage.setItem('lang',  lang); }, [lang]);
   useEffect(() => { AsyncStorage.setItem('theme', dark ? 'dark' : 'light'); }, [dark]);
@@ -222,15 +238,22 @@ export default function HomeScreen() {
         {/* Card header */}
         <View style={[s.cardHeader, { borderBottomColor: th.border }]}>
           <View>
-            <Text style={[s.cardDay, { color: th.textPrimary }]}>{fullDay}</Text>
-            <Text style={[s.cardDate, { color: th.textMuted }]}>{dateStr}</Text>
+            <Text style={[s.cardDay, { color: th.textPrimary }]} maxFontSizeMultiplier={CARD_FONT_SCALE_CAP}>{fullDay}</Text>
+            <Text style={[s.cardDate, { color: th.textMuted }]} maxFontSizeMultiplier={CARD_FONT_SCALE_CAP}>{dateStr}</Text>
           </View>
           {isToday && (
             <View style={[s.todayBadge, { backgroundColor: palette.amber }]}>
-              <Text style={s.todayBadgeText}>{lang === 'gr' ? 'Σήμερα' : 'Today'}</Text>
+              <Text style={s.todayBadgeText} maxFontSizeMultiplier={CARD_FONT_SCALE_CAP}>{lang === 'gr' ? 'Σήμερα' : 'Today'}</Text>
             </View>
           )}
         </View>
+
+        {showBreakfast && menu.breakfast && (
+          <>
+            <BreakfastSection breakfast={menu.breakfast} t={t} th={th} />
+            <View style={[s.sectionDivider, { backgroundColor: th.border }]} />
+          </>
+        )}
 
         {dayMenu ? (
           <>
@@ -239,7 +262,7 @@ export default function HomeScreen() {
             <MealSection label={t.dinner} meal={dayMenu.dinner} extra={dayMenu.dinnerExtra} t={t} th={th} />
           </>
         ) : (
-          <Text style={[s.noData, { color: th.textMuted }]}>—</Text>
+          <Text style={[s.noData, { color: th.textMuted }]} maxFontSizeMultiplier={CARD_FONT_SCALE_CAP}>—</Text>
         )}
       </ScrollView>
     );
@@ -251,24 +274,16 @@ export default function HomeScreen() {
         <UpdateModal updateInfo={updateInfo} onDismiss={dismiss} darkMode={dark} lang={lang} />
       )}
 
-      {/* Header */}
-      <View style={s.header}>
-        <View style={s.headerLeft}>
-          <Image source={require('../../assets/images/icon.png')} style={s.logoImg} />
-          <View>
-            <Text style={[s.appTitle, { color: th.textPrimary }]}>{t.appTitle}</Text>
-            <Text style={[s.appSubtitle, { color: palette.teal }]}>{t.subtitle}</Text>
-          </View>
-        </View>
-        <View style={s.headerRight}>
-          <Pressable onPress={() => setDark(d => !d)} style={[s.iconBtn, { backgroundColor: th.surfaceAlt }]}>
-            <Text style={s.iconBtnText}>{dark ? '☀️' : '🌙'}</Text>
+      <PageHeader
+        th={th}
+        title={HOME_TITLE}
+        subtitle={t.subtitle}
+        right={
+          <Pressable onPress={() => router.push('/Settings')} style={[s.iconBtn, { backgroundColor: th.surfaceAlt }]}>
+            <Ionicons name="settings-outline" size={18} color={th.textPrimary} />
           </Pressable>
-          <Pressable onPress={() => setLang(l => l === 'gr' ? 'en' : 'gr')} style={[s.iconBtn, { backgroundColor: th.surfaceAlt }]}>
-            <Text style={[s.iconBtnLabel, { color: th.textPrimary }]}>{lang === 'gr' ? 'EN' : 'ΕΛ'}</Text>
-          </Pressable>
-        </View>
-      </View>
+        }
+      />
 
       {closureNotice && (
         <View style={[s.noticeBar, { backgroundColor: palette.amber }]}>
@@ -354,7 +369,7 @@ export default function HomeScreen() {
                   <Text style={s.todayBadgeText}>{lang === 'gr' ? 'Σήμερα' : 'Today'}</Text>
                 </View>
               </View>
-              <MenuSkeleton th={th} t={t} showHeader={false} padded={false} fill />
+              <MenuSkeleton th={th} t={t} showHeader={false} padded={false} fill showBreakfast={showBreakfast} />
             </View>
           </View>
         </View>
@@ -387,15 +402,7 @@ function DayDot({ isActive, isToday, idleColor }: { isActive: boolean; isToday: 
 const s = StyleSheet.create({
   root:       { flex: 1 },
   loadingWrap:{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 30 },
-  // Header
-  header:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  logoImg:    { width: 40, height: 40, borderRadius: 10, overflow: 'hidden' },
-  appTitle:   { fontSize: 17, fontWeight: '800', letterSpacing: -0.3 },
-  appSubtitle:{ fontSize: 11, fontWeight: '500', letterSpacing: 0.3, marginTop: 1 },
-  headerRight:{ flexDirection: 'row', gap: 8 },
   iconBtn:    { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  iconBtnText:{ fontSize: 16 },
   iconBtnLabel:{ fontSize: 13, fontWeight: '700' },
   // Seasonal closure notice
   noticeBar:  { marginHorizontal: 16, marginBottom: 8, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12 },

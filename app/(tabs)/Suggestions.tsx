@@ -11,6 +11,8 @@ import { SuggestionRow } from '@/data/suggestionsService';
 import { useSuggestions, VoteDirection } from '@/data/suggestions';
 import { i18n, Lang } from '@/constants/i18n';
 import { darkTheme, lightTheme, palette, Theme } from '@/constants/theme';
+import { PageHeader } from '@/components/PageHeader';
+import { SuggestionSkeleton } from '@/components/SuggestionSkeleton';
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -52,14 +54,7 @@ export default function SuggestionsScreen() {
 
   return (
     <SafeAreaView style={[s.root, { backgroundColor: th.bg, paddingTop: safePT }]}>
-      {/* Header */}
-      <View style={s.header}>
-        <View style={s.headerTitleRow}>
-          <Ionicons name="bulb-outline" size={22} color={palette.amber} />
-          <Text style={[s.title, { color: th.textPrimary }]}>{t.suggestionsTitle}</Text>
-        </View>
-        <Text style={[s.subtitle, { color: th.textMuted }]}>{t.suggestionsSubtitle}</Text>
-      </View>
+      <PageHeader th={th} title={t.suggestionsTitle} subtitle={t.suggestionsSubtitle} />
 
       {suggestions ? (
         <FlatList
@@ -86,8 +81,8 @@ export default function SuggestionsScreen() {
           </Pressable>
         </View>
       ) : (
-        <View style={s.centerWrap}>
-          <ActivityIndicator color={palette.teal} />
+        <View style={s.list}>
+          <SuggestionSkeleton th={th} />
         </View>
       )}
 
@@ -254,10 +249,6 @@ function NewSuggestionModal({ visible, onClose, onSubmit, th, t }: {
 
 const s = StyleSheet.create({
   root:   { flex: 1 },
-  header: { paddingHorizontal: 20, paddingTop: 20, marginBottom: 12 },
-  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title:          { fontSize: 22, fontWeight: '800', letterSpacing: -0.4 },
-  subtitle:       { fontSize: 13, marginTop: 3 },
   list:      { paddingHorizontal: 20, paddingTop: 4 },
   centerWrap:{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 30 },
   empty:     { fontSize: 14, textAlign: 'center' },

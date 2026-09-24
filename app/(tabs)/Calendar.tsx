@@ -11,7 +11,9 @@ import { getWeekKeyForDate } from '@/utils/getWeek';
 import { i18n, Lang } from '@/constants/i18n';
 import { darkTheme, lightTheme, palette } from '@/constants/theme';
 import { MealSection } from '@/components/MealSection';
+import { BreakfastSection } from '@/components/BreakfastSection';
 import { MenuSkeleton } from '@/components/MenuSkeleton';
+import { PageHeader } from '@/components/PageHeader';
 
 type DayKey = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 const DAY_KEYS: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -22,6 +24,7 @@ const isSameDay = (a: Date, b: Date) =>
 export default function CalendarScreen() {
   const [dark, setDark] = useState(true);
   const [lang, setLang] = useState<Lang>('gr');
+  const [showBreakfast, setShowBreakfast] = useState(false);
 
   const today = useMemo(() => new Date(), []);
   const [viewMonth, setViewMonth]     = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
@@ -64,10 +67,11 @@ export default function CalendarScreen() {
   }));
 
   useFocusEffect(useCallback(() => {
-    AsyncStorage.multiGet(['theme', 'lang']).then(pairs => {
+    AsyncStorage.multiGet(['theme', 'lang', 'showBreakfast']).then(pairs => {
       const map = Object.fromEntries(pairs);
       if (map.theme !== null) setDark(map.theme === 'dark');
       if (map.lang === 'en' || map.lang === 'gr') setLang(map.lang as Lang);
+      setShowBreakfast(map.showBreakfast === 'true');
     });
   }, []));
 
@@ -127,16 +131,9 @@ export default function CalendarScreen() {
 
   return (
     <SafeAreaView style={[s.root, { backgroundColor: th.bg, paddingTop: safePT }]}>
-      <ScrollView contentContainerStyle={[s.scroll, { paddingBottom: tabBarHeight + 20 }]}>
+      <PageHeader th={th} title={t.tabCalendar} subtitle={t.calendarSubtitle} />
 
-        {/* Header */}
-        <View style={s.header}>
-          <View style={s.headerTitleRow}>
-            <Ionicons name="calendar-outline" size={22} color={palette.teal} />
-            <Text style={[s.title, { color: th.textPrimary }]}>{t.tabCalendar}</Text>
-          </View>
-          <Text style={[s.subtitle, { color: th.textMuted }]}>{t.calendarSubtitle}</Text>
-        </View>
+      <ScrollView contentContainerStyle={[s.scroll, { paddingBottom: tabBarHeight + 20 }]}>
 
         {/* Month nav */}
         <View style={[s.card, { backgroundColor: th.surface }]}>
@@ -248,6 +245,13 @@ export default function CalendarScreen() {
             )}
           </View>
 
+          {showBreakfast && menu?.breakfast && (
+            <>
+              <BreakfastSection breakfast={menu.breakfast} t={t} th={th} />
+              <View style={[s.sectionDivider, { backgroundColor: th.border }]} />
+            </>
+          )}
+
           {dayMenu ? (
             <>
               <MealSection label={t.lunch} meal={dayMenu.lunch} extra={dayMenu.lunchExtra} t={t} th={th} />
@@ -264,7 +268,7 @@ export default function CalendarScreen() {
               </Pressable>
             </View>
           ) : (
-            <MenuSkeleton th={th} t={t} showHeader={false} padded={false} />
+            <MenuSkeleton th={th} t={t} showHeader={false} padded={false} showBreakfast={showBreakfast} />
           )}
         </View>
 
@@ -275,12 +279,7 @@ export default function CalendarScreen() {
 
 const s = StyleSheet.create({
   root:   { flex: 1 },
-  scroll: { padding: 20 },
-  // Header
-  header:        { marginBottom: 16 },
-  headerTitleRow:{ flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title:         { fontSize: 22, fontWeight: '800', letterSpacing: -0.4 },
-  subtitle:      { fontSize: 13, marginTop: 3 },
+  scroll: { paddingHorizontal: 20, paddingTop: 4 },
   // Card
   card: { borderRadius: 16, padding: 16, marginBottom: 16 },
   // Sliding grid/strip viewport

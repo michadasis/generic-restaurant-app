@@ -3,6 +3,12 @@ import { StyleSheet, Text, View } from 'react-native';
 import { i18n } from '@/constants/i18n';
 import { palette, type Theme } from '@/constants/theme';
 
+// The home card's height is fixed to the screen's measured available space, so
+// on devices with a larger system font size this text can grow past it and
+// force the card to scroll internally. Cap scaling here so it stays legible
+// without ever pushing content past the fixed card height.
+export const FONT_SCALE_CAP = 1.3;
+
 export function MealSection({
   label, meal, extra, t, th,
 }: {
@@ -14,27 +20,27 @@ export function MealSection({
 }) {
   return (
     <View style={s.mealSection}>
-      <Text style={[s.mealSectionLabel, { color: palette.teal }]}>{label}</Text>
+      <Text style={[s.mealSectionLabel, { color: palette.teal }]} maxFontSizeMultiplier={FONT_SCALE_CAP}>{label}</Text>
 
-      <Text style={[s.mealSubLabel, { color: th.textMuted }]}>{t.main}</Text>
+      <Text style={[s.mealSubLabel, { color: th.textMuted }]} maxFontSizeMultiplier={FONT_SCALE_CAP}>{t.main}</Text>
       {meal.main.map((item, i) => (
-        <Text key={i} style={[s.mealItem, { color: th.textPrimary }]}>{item}</Text>
+        <Text key={i} style={[s.mealItem, { color: th.textPrimary }]} maxFontSizeMultiplier={FONT_SCALE_CAP}>{item}</Text>
       ))}
 
       {meal.first.length > 0 && (
         <>
-          <Text style={[s.mealSubLabel, { color: th.textMuted, marginTop: 6 }]}>{t.firstCourse}</Text>
+          <Text style={[s.mealSubLabel, { color: th.textMuted, marginTop: 6 }]} maxFontSizeMultiplier={FONT_SCALE_CAP}>{t.firstCourse}</Text>
           {meal.first.map((item, i) => (
-            <Text key={i} style={[s.mealItem, { color: th.textSecondary }]}>{item}</Text>
+            <Text key={i} style={[s.mealItem, { color: th.textSecondary }]} maxFontSizeMultiplier={FONT_SCALE_CAP}>{item}</Text>
           ))}
         </>
       )}
 
       {extra && extra.length > 0 && (
         <>
-          <Text style={[s.mealSubLabel, { color: th.textMuted, marginTop: 6 }]}>{t.extra}</Text>
+          <Text style={[s.mealSubLabel, { color: th.textMuted, marginTop: 6 }]} maxFontSizeMultiplier={FONT_SCALE_CAP}>{t.extra}</Text>
           {extra.map((item, i) => (
-            <Text key={i} style={[s.mealItem, { color: th.textSecondary }]}>{item}</Text>
+            <Text key={i} style={[s.mealItem, { color: th.textSecondary }]} maxFontSizeMultiplier={FONT_SCALE_CAP}>{item}</Text>
           ))}
         </>
       )}
