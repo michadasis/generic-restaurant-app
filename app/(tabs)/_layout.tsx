@@ -78,13 +78,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => <Ionicons name="bulb-outline" size={size} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="About"
-        options={{
-          title: t.tabAbout,
-          tabBarIcon: ({ color, size }) => <Ionicons name="information-circle-outline" size={size} color={color} />,
-        }}
-      />
       <Tabs.Screen name="modal" options={{ href: null }} />
       <Tabs.Screen name="(tabs)" options={{ href: null }} />
     </Tabs>

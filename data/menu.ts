@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { RawMenu, DayMenuRaw, getCachedRawMenu, loadRawMenu } from './menuService';
+import { RawMenu, DayMenuRaw, LangText, getCachedRawMenu, loadRawMenu } from './menuService';
 
 export interface Meal {
   first: string[];
@@ -17,9 +17,14 @@ export type WeekMenu = {
   [day: string]: DayMenu;
 };
 
+// Breakfast is the same every day (not part of the weekly rotation) — a flat
+// map of category -> localized item names, e.g. { staples: [...], breads: [...] }.
+export type BreakfastMenu = Record<string, string[]>;
+
 export interface Menu {
   cycleWeeks: number;
-  [week: string]: WeekMenu | number;
+  breakfast: BreakfastMenu;
+  [week: string]: WeekMenu | BreakfastMenu | number;
 }
 
 type Lang = 'gr' | 'en';
@@ -29,6 +34,14 @@ function transformMeal(meal: any, lang: Lang): Meal {
     first: meal.first[lang],
     main: meal.main[lang],
   };
+}
+
+function transformBreakfast(raw: Record<string, LangText>, lang: Lang): BreakfastMenu {
+  const result: BreakfastMenu = {};
+  for (const category of Object.keys(raw)) {
+    result[category] = raw[category][lang];
+  }
+  return result;
 }
 
 function transformWeek(week: Record<string, DayMenuRaw>, lang: Lang): WeekMenu {
@@ -45,7 +58,7 @@ function transformWeek(week: Record<string, DayMenuRaw>, lang: Lang): WeekMenu {
 }
 
 export function buildMenu(raw: RawMenu, lang: Lang): Menu {
-  const result: Menu = { cycleWeeks: raw.cycleWeeks };
+  const result: Menu = { cycleWeeks: raw.cycleWeeks, breakfast: transformBreakfast(raw.breakfast, lang) };
   for (let i = 1; i <= raw.cycleWeeks; i++) {
     const key = `week${i}`;
     result[key] = transformWeek(raw[key] as Record<string, DayMenuRaw>, lang);

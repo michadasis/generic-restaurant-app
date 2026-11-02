@@ -2,8 +2,8 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, Platform, StatusBar, Linking, Image, Pressable } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { useFocusEffect } from 'expo-router';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { i18n, Lang } from '@/constants/i18n';
 import { darkTheme, lightTheme, palette, Theme } from '@/constants/theme';
@@ -12,6 +12,7 @@ const GITHUB_URL = 'https://github.com/michadasis/generic-restaurant-app';
 const UNI_URL     = 'https://www.uowm.gr/';
 
 export default function AboutScreen() {
+  const router = useRouter();
   const [dark, setDark] = useState(true);
   const [lang, setLang] = useState<Lang>('gr');
 
@@ -27,17 +28,19 @@ export default function AboutScreen() {
   const t       = i18n[lang];
   const safePT  = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
   const version = Constants.expoConfig?.version ?? '—';
-  // The tab bar floats over the screen (position: 'absolute' in the tabs layout),
-  // so its height isn't reserved automatically — pad the scroll content ourselves.
-  const tabBarHeight = useBottomTabBarHeight();
+  const insets  = useSafeAreaInsets();
 
   return (
     <SafeAreaView style={[s.root, { backgroundColor: th.bg, paddingTop: safePT }]}>
-      <ScrollView contentContainerStyle={[s.scroll, { paddingBottom: tabBarHeight + 20 }]}>
+      <Pressable onPress={() => router.back()} style={[s.backBtn, { backgroundColor: th.surfaceAlt }]} hitSlop={8}>
+        <Ionicons name="chevron-back" size={20} color={th.textPrimary} />
+      </Pressable>
+
+      <ScrollView contentContainerStyle={[s.scroll, { paddingBottom: insets.bottom + 20 }]}>
 
         {/* Header */}
         <View style={s.header}>
-          <Image source={require('../../assets/images/icon.png')} style={s.logoImg} />
+          <Image source={require('../assets/images/icon.png')} style={s.logoImg} />
           <Text style={[s.appName, { color: th.textPrimary }]}>{t.appTitle}</Text>
           <View style={[s.versionBadge, { backgroundColor: th.surfaceAlt }]}>
             <Text style={[s.versionText, { color: th.textMuted }]}>v{version}</Text>
@@ -126,6 +129,7 @@ function LinkRow({ icon, label, th, onPress }: { icon: keyof typeof Ionicons.gly
 
 const s = StyleSheet.create({
   root:     { flex: 1 },
+  backBtn:  { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginLeft: 16, marginTop: 8 },
   scroll:   { padding: 20 },
   header:   { alignItems: 'center', marginBottom: 16, gap: 8 },
   logoImg:  { width: 64, height: 64, borderRadius: 16, overflow: 'hidden' },
