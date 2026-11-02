@@ -273,6 +273,7 @@ export default function HomeScreen() {
 
       <PageHeader
         th={th}
+        icon="app-logo"
         title={t.appTitle}
         subtitle={t.subtitle}
         right={

@@ -50,7 +50,7 @@ export default function SettingsScreen() {
       </Pressable>
 
       <ScrollView contentContainerStyle={[s.scroll, { paddingBottom: insets.bottom + 20 }]}>
-        <PageHeader th={th} title={t.settingsTitle} subtitle={t.settingsSubtitle} />
+        <PageHeader th={th} icon="settings-outline" title={t.settingsTitle} subtitle={t.settingsSubtitle} />
 
         {/* Appearance */}
         <SettingsCard icon="contrast-outline" label={t.sectionAppearance} th={th}>

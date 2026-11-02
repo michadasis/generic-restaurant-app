@@ -54,7 +54,7 @@ export default function SuggestionsScreen() {
 
   return (
     <SafeAreaView style={[s.root, { backgroundColor: th.bg, paddingTop: safePT }]}>
-      <PageHeader th={th} title={t.suggestionsTitle} subtitle={t.suggestionsSubtitle} />
+      <PageHeader th={th} icon="bulb-outline" iconColor={palette.amber} title={t.suggestionsTitle} subtitle={t.suggestionsSubtitle} />
 
       {suggestions ? (
         <FlatList

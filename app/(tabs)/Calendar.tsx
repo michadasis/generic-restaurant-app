@@ -131,7 +131,7 @@ export default function CalendarScreen() {
 
   return (
     <SafeAreaView style={[s.root, { backgroundColor: th.bg, paddingTop: safePT }]}>
-      <PageHeader th={th} title={t.tabCalendar} subtitle={t.calendarSubtitle} />
+      <PageHeader th={th} icon="calendar-outline" title={t.tabCalendar} subtitle={t.calendarSubtitle} />
 
       <ScrollView contentContainerStyle={[s.scroll, { paddingBottom: tabBarHeight + 20 }]}>
 
