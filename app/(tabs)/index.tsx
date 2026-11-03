@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AppState,
   Dimensions,
   FlatList,
   Platform,
@@ -23,8 +24,8 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useFocusEffect, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMenu, WeekMenu, DayMenu } from '../../data/menu';
-import { getTodayKey } from '@/utils/getToday';
-import { getCurrentWeekKey } from '@/utils/getWeek';
+import { getDayKeyForDate } from '@/utils/getToday';
+import { getWeekKeyForDate } from '@/utils/getWeek';
 import { getClosureNotice } from '@/utils/getClosureNotice';
 import { useUpdateChecker } from '@/hooks/useUpdateChecker';
 import { UpdateModal } from '@/components/UpdateModal';
@@ -58,6 +59,8 @@ const DAY_KEYS: DayKey[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'frida
 // swiping across a week boundary feels like scrolling to just another day.
 type VirtualDay = { key: string; dayKey: DayKey; weekKey: string; weekDelta: number };
 
+const dayStamp = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+
 const shiftWeekKey = (weekKey: string, dir: 1 | -1, cycleWeeks: number) => {
   const cur  = parseInt(weekKey.replace('week', ''), 10);
   const next = ((cur - 1 + dir + cycleWeeks) % cycleWeeks) + 1;
@@ -72,8 +75,14 @@ export default function HomeScreen() {
   const { updateInfo, dismiss } = useUpdateChecker();
   const { menu, cycleWeeks, loading: menuLoading, error: menuError, refresh: refreshMenu } = useMenu(lang);
 
-  const todayKey   = getTodayKey();
+  // "Today" is held in state rather than read from new Date() on every render:
+  // the app can sit in memory for days, and everything below (selected week,
+  // week offset, current card) is anchored to the day it was computed on. When
+  // the date rolls over we re-anchor all of it at once in syncToday().
+  const [today, setToday] = useState(() => new Date());
+  const todayKey   = getDayKeyForDate(today);
   const todayIndex = DAY_KEYS.indexOf(todayKey);
+  const todayStamp = dayStamp(today);
 
   // Measured height of the area below the dots row — cards size themselves to
   // fit exactly within it, so they never get clipped by the tab bar regardless
@@ -120,23 +129,34 @@ export default function HomeScreen() {
   // has loaded from cache/network.
   useEffect(() => {
     if (cycleWeeks !== null && selectedWeek === null) {
-      setSelectedWeek(getCurrentWeekKey(cycleWeeks));
+      setSelectedWeek(getWeekKeyForDate(today, cycleWeeks));
     }
-  }, [cycleWeeks, selectedWeek]);
+  }, [cycleWeeks, selectedWeek, today]);
 
-  const hasScrolledInitially = useRef(false);
+  // If the calendar day changed while the app was backgrounded (or sitting on
+  // another tab), snap everything back to the new today. The FlatList is keyed
+  // on todayStamp, so it remounts and lands on the new day via
+  // initialScrollIndex — no timed scrollToIndex needed.
+  const syncToday = useCallback(() => {
+    const now = new Date();
+    if (dayStamp(now) === todayStamp) return;
+    const idx = DAY_KEYS.indexOf(getDayKeyForDate(now)) + 1;
+    pendingRecenter.current = null;
+    currentIndexRef.current = idx;
+    setToday(now);
+    setCurrentDayIndex(idx);
+    setWeekOffset(0);
+    setSelectedWeek(cycleWeeks !== null ? getWeekKeyForDate(now, cycleWeeks) : null);
+  }, [todayStamp, cycleWeeks]);
+
   useEffect(() => {
-    if (!menu || hasScrolledInitially.current) return;
-    // Burn the latch only once the scroll actually happens — if `menu`
-    // changes again (e.g. the cache→network refresh) before the timer
-    // fires, cleanup cancels this timer and the effect reruns to
-    // reschedule it, rather than silently skipping the scroll.
-    const timer = setTimeout(() => {
-      flatListRef.current?.scrollToIndex({ index: todayIndex + 1, animated: false });
-      hasScrolledInitially.current = true;
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [menu, todayIndex]);
+    const sub = AppState.addEventListener('change', state => {
+      if (state === 'active') syncToday();
+    });
+    return () => sub.remove();
+  }, [syncToday]);
+
+  useFocusEffect(syncToday);
 
   const virtualDays: VirtualDay[] = useMemo(() => {
     if (selectedWeek === null || cycleWeeks === null) return [];
@@ -162,14 +182,13 @@ export default function HomeScreen() {
 
   const th = dark ? darkTheme : lightTheme;
   const t  = i18n[lang];
-  const closureNotice = getClosureNotice();
+  const closureNotice = getClosureNotice(today);
 
   // Day/date are known immediately (unlike the menu itself), so the loading
   // skeleton can show today's real header instead of a placeholder block —
   // it's always today's card since we land there right after data arrives.
   const todayFullDay = t.fullDays[todayIndex];
-  const now = new Date();
-  const todayDateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const todayDateStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}`;
 
   const goToDay = (localIndex: number) => {
     const target = localIndex + 1;
@@ -208,10 +227,9 @@ export default function HomeScreen() {
   };
 
   const getDayDate = (dayKey: DayKey, weekDelta: number) => {
-    const now   = new Date();
     const diff  = DAY_KEYS.indexOf(dayKey) - DAY_KEYS.indexOf(todayKey);
-    const d     = new Date(now);
-    d.setDate(now.getDate() + diff + (weekOffset + weekDelta) * 7);
+    const d     = new Date(today);
+    d.setDate(today.getDate() + diff + (weekOffset + weekDelta) * 7);
     return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
   };
 
@@ -291,7 +309,10 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {menu ? (
+      {/* Wait for virtualDays too (selectedWeek is seeded one render after the
+          menu arrives) so the FlatList mounts with all 9 items present and
+          initialScrollIndex can land on today on the very first frame. */}
+      {menu && virtualDays.length > 0 ? (
         <>
           {/* Day dots */}
           <View style={s.dotRow}>
@@ -326,8 +347,10 @@ export default function HomeScreen() {
             onLayout={e => setCardAreaHeight(e.nativeEvent.layout.height)}
           >
             <FlatList
+              key={todayStamp}
               ref={flatListRef}
               data={virtualDays}
+              initialScrollIndex={todayIndex + 1}
               renderItem={renderCard}
               keyExtractor={item => item.key}
               horizontal
